@@ -1,0 +1,54 @@
+                  <!-- table -->
+                  <table class="table table-sm table-borderless table-hover">
+                    <thead>
+                      <tr>                     
+                        <th><strong>Social channel<strong></th>
+                        <th><strong>Keywords<strong></th>
+                        <th><strong>Posts<strong></th>
+                        <th><strong>Users<strong></th>
+                        <th><strong>Hashtags<strong></th>
+                        <th><strong>Status<strong></th>
+                        <th><strong>Date<strong></th>
+                        <th><strong>Action<strong></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for search in searches %}
+                      <!-- <tr onclick="document.getElementById('form-{{ loop.index }}').submit()" style="cursor: pointer;"> -->
+                      <tr>
+                        <form id="form-{{ loop.index }}" method="POST" action="/view.html">
+                            <input type="hidden" name="handle" value="{{ sessione.handle }}">
+                            <input type="hidden" name="search_id" value="{{ search.search_id }}">
+                            <input type="hidden" name="session_id" value="{{ search.session_id }}">
+                            <input type="hidden" name="mode" value="{{ search.mode }}">
+                            <input type="hidden" name="query" value="{{ search.query }}">
+                            <input type="hidden" name="username" value="{{ sessione.username }}">
+                            <input type="hidden" name="limit" value="{{ search.resultlimit }}">
+                        </form>
+                        <td> <!-- social channel -->
+                          <div class="avatar avatar-sm">
+                            <img src="./assets/avatars/bluesky-circle.png" alt="..." class="avatar-img rounded-circle">
+                          </div>
+                        </td>
+                        <td>{% if search.mode == 'Hashtag' %}#{% else %}@{% endif %}{{ search.query }}</td>
+                        <td>{{ search.posts }} ({{ search.resultlimit }})</td>
+                        <td>{{ search.users }}</td>
+                        <td>{{ search.hashtags }}</td>
+                        <td><span class="badge badge-success">Completed</span></td>
+                        <td>{{ search.timestamp }}</td>
+                        <!-- <td>{{ search.mode }}</td> -->
+                        <!-- <td>{{ search.resultlimit }}</td> -->
+                        <!-- <td><span class="badge badge-success">Completed</span><td> -->
+                        <!-- <td><span class="badge badge-primary">Running</span></td> -->
+                        <td><button class="btn btn-sm dropdown-toggle more-horizontal" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          <span class="text-muted sr-only">Action</span>
+                          </button>
+                          <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="#" onclick="document.getElementById('form-{{ loop.index }}').submit();">View</a>
+                            <a class="dropdown-item" href="#">Remove</a>
+                          </div>
+                        </td>
+                      </tr>
+                      {% endfor %}				
+                    </tbody>
+                  </table>

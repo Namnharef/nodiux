@@ -1,0 +1,14 @@
+
+                                <table class="table table-bordered" width="100%" cellspacing="0">
+                                  <thead>
+                                    <tr>
+                                      <th>Username</th>
+                                        <th class="text-right">Mentions received</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+									{% for k, v in top10.mentions.items() %}
+									<tr><td>@{{ k }}</td><td class="text-right pr-3">{{ v }}</td></tr>
+									{% endfor %}
+                                  </tbody>
+                                </table>

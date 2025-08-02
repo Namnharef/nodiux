@@ -1,0 +1,21 @@
+
+
+                             <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">                
+                                                 
+                                <table class="table table-bordered mb-0" id="dataTable" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+											<th>Date</th><th>User</th><th>Text</th>
+                                        </tr>
+                                    </thead>									
+                                    <tbody>									
+										{% for post in posts %}
+										<tr>
+											<td>{{ post.created_at }}</td>
+											<td>{{ post.author_handle }}</td>
+											<td>{{ post.text }}</td>
+										</tr>
+										{% endfor %}								
+                                    </tbody>
+                                </table>
+                            </div>

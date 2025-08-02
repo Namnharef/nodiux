@@ -1,0 +1,24 @@
+                              {% for search in searches %}
+                                {% if search.search_id==sessione.search_id %}
+                                <div class="px-3">
+                                  <p class="text-muted mb-1">Posts</p>
+                                  <p class="mb-0"><i class="fe fe-message-circle mr-1"></i>{{ search.posts }}</p>
+                                </div>
+                                <div class="px-3">
+                                  <p class="text-muted mb-1">Users</p>
+                                  <p class="mb-0"><i class="fe fe-user mr-1"></i>{{ search.users }}</p>
+                                </div>
+                                <div class="px-3">
+                                  <p class="text-muted mb-1">Mentions</p>
+                                  <p class="mb-0"><i class="fe fe-at-sign mr-1"></i>{{ search.mentions }}</p>
+                                </div>
+                                <div class="px-3">
+                                  <p class="text-muted mb-1">Hashtags</p>
+                                  <p class="mb-0"><i class="fe fe-hash mr-1"></i>{{ search.hashtags }}</p>
+                                </div>
+                                <div class="px-3">
+                                  <p class="text-muted mb-1">Emojis</p>
+                                  <p class="mb-0"><i class="fe fe-smile mr-1"></i>{{ search.emojis }}</p>
+                                </div>
+                                {% endif %}                      
+                              {% endfor %}		          

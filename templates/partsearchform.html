@@ -1,0 +1,130 @@
+                    <!-- Bottone per aprire il modal -->
+                    <form class="form">
+                      <div class="form-row">
+                        <div class="col">
+                          <div class="dropdown">
+                            <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#queryModal">
+                              Add a new query
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </form>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="queryModal" tabindex="-1" role="dialog" aria-labelledby="queryModalLabel" aria-hidden="true">
+                      <div class="modal-dialog modal-lg" role="document"> <!-- larghezza modal grande -->
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="queryModalLabel">Search for username posts or specific hashtag</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <div class="modal-body">
+                            <form class="needs-validation" method="POST" action="/" id="searchForm" novalidate>
+                              <div class="custom-control custom-checkbox mb-3">
+                                <input type="checkbox" class="custom-control-input" id="customControlValidation1" required checked>
+                                <label class="custom-control-label" for="customControlValidation1">Bluesky</label>
+                                <div class="invalid-feedback">Example invalid feedback text</div>
+                              </div>
+
+                              <div class="form-row">
+                                <div class="col-md-4 mb-3">
+                                  <label for="hashtagInput">Hashtag</label>
+                                  <div class="input-group">
+                                    <div class="input-group-prepend">
+                                      <span class="input-group-text" id="inputGroupHashtag">#</span>
+                                    </div>
+                                    <input type="text" class="form-control" id="hashtagInput" aria-describedby="inputGroupHashtag" 
+                                    placeholder="yourhashtag" name="hashtag" 
+                                    value="{% if sessione.mode == 'Hashtag' %}{{ sessione.query }}{% endif %}">
+                                    <div class="invalid-feedback">Please enter a hashtag</div>
+                                  </div>
+                                </div>
+                               
+                                <div class="col-md-4 mb-3">
+                                  <label for="usernameInput">Username</label>
+                                  <div class="input-group">
+                                    <div class="input-group-prepend">
+                                      <span class="input-group-text" id="inputGroupUsername">@</span>
+                                    </div>
+                                    <input type="text" class="form-control" id="usernameInput" aria-describedby="inputGroupUsername" 
+                                    placeholder="username" name="username" 
+                                    value="{% if sessione.mode == 'User' %}{{ sessione.query }}{% endif %}">
+                                    <div class="invalid-feedback">Please enter a username</div>
+                                  </div>
+                                </div>
+
+                                <input type="hidden" name="mode" value="" class="d-md-none" id="modeInput">
+                                <input type="hidden" name="query" value="" class="d-md-none" id="queryInput">
+
+                                <script>
+                                  const form = document.querySelector('#searchForm');
+                                  const hashtagInput = document.getElementById('hashtagInput');
+                                  const usernameInput = document.getElementById('usernameInput');
+                                  const modeInput = document.getElementById('modeInput');
+                                  const queryInput = document.getElementById('queryInput');
+
+                                  function updateModeFields() {
+                                    const hashtag = hashtagInput.value.trim();
+                                    const username = usernameInput.value.trim();
+
+                                    if (hashtag !== '') {
+                                      usernameInput.disabled = true;
+                                      hashtagInput.disabled = false;
+                                      modeInput.value = 'Hashtag';
+                                      queryInput.value = hashtag;
+                                    } else if (username !== '') {
+                                      hashtagInput.disabled = true;
+                                      usernameInput.disabled = false;
+                                      modeInput.value = 'User';
+                                      queryInput.value = username;
+                                    } else {
+                                      hashtagInput.disabled = false;
+                                      usernameInput.disabled = false;
+                                      modeInput.value = '';
+                                      queryInput.value = '';
+                                    }
+                                  }
+
+                                  // Gestione live durante input
+                                  hashtagInput.addEventListener('input', updateModeFields);
+                                  usernameInput.addEventListener('input', updateModeFields);
+
+                                  // Validazione alla submit
+                                  form.addEventListener('submit', function (e) {
+                                    updateModeFields();
+
+                                    const isHashtag = hashtagInput.value.trim() !== '';
+                                    const isUsername = usernameInput.value.trim() !== '';
+
+                                    if (!isHashtag && !isUsername) {
+                                      e.preventDefault();
+                                      hashtagInput.setCustomValidity('Inserisci almeno un hashtag o uno username');
+                                      hashtagInput.reportValidity();
+                                    } else {
+                                      hashtagInput.setCustomValidity('');
+                                      usernameInput.setCustomValidity('');
+                                    }
+                                  });
+
+                                  // Inizializzazione allo stato corretto se si arriva da una sessione
+                                  window.addEventListener('DOMContentLoaded', updateModeFields);
+                                </script>
+
+                                <div class="col-md-4 mb-3">
+                                  <label for="maxResultsInput">Max results</label>
+                                  <input type="number" class="form-control" id="maxResultsInput" placeholder="100" min="1" max="3000" 
+                                    name="limit" value="{{ sessione.limit }}" required>
+                                  <div class="invalid-feedback">Please enter a valid number (1-3000)</div>
+                                </div>
+                              </div>
+
+                              <button class="btn btn-primary" type="submit">Search</button>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- fine modal -->

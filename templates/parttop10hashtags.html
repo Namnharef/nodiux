@@ -1,0 +1,21 @@
+
+						  <div class="card-body">
+							<div class="table-responsive">
+							  <table class="table table-bordered table-sm" id="topMentionsTable" width="100%" cellspacing="0">
+								<thead>
+								  <tr>
+									<th>Hashtag</th>
+									<th class="text-right">Count</th>
+								  </tr>
+								</thead>
+								<tbody>
+								  {% if top10 %}
+									{% for k, v in top10.hashtags.items() %}
+										<tr><td>@{{ k }}</td><td class="text-right">{{ v }}</td></tr>
+									{% endfor %}
+								  {% endif %}
+								</tbody>
+							  </table>
+							</div>
+						  </div>
+
