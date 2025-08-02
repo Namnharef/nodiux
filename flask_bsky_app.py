@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, flash
 from backend.bluesky_client import fetch_posts
 from backend.graph_utils import build_networks, build_kpis, build_hashtag_csv_gexf, build_mentions_csv_gexf
 import pandas as pd
@@ -41,6 +41,29 @@ DEMO_APP_PWD = '42fc-xq6u-p2qh-tlm5'
 MAX_LIMIT=10000
 
 print(f"Config: {config}")
+
+DEMO_USERS = [
+    {"user": "nodiuxdemo1", "pwd": "Malala431"},        # Pakistan
+    {"user": "nodiuxdemo2", "pwd": "Mandela782"},       # Sudafrica
+    {"user": "nodiuxdemo3", "pwd": "Camus159"},         # Algeria/Francia
+    {"user": "nodiuxdemo4", "pwd": "Maathai624"},       # Kenya
+    {"user": "nodiuxdemo5", "pwd": "Menchu947"},        # Guatemala
+    {"user": "nodiuxdemo6", "pwd": "Murad318"},         # Iraq
+    {"user": "nodiuxdemo7", "pwd": "Ressa506"},         # Filippine
+    {"user": "nodiuxdemo8", "pwd": "Tutu893"},          # Sudafrica
+    {"user": "nodiuxdemo9", "pwd": "Pamuk274"},         # Turchia
+    {"user": "nodiuxdemo10", "pwd": "Morrison635"},     # USA
+    {"user": "nodiuxdemo11", "pwd": "Karman482"},       # Yemen
+    {"user": "nodiuxdemo12", "pwd": "Yunus719"},        # Bangladesh
+    {"user": "nodiuxdemo13", "pwd": "Ebadi364"},        # Iran
+    {"user": "nodiuxdemo14", "pwd": "Gbowee528"},       # Liberia
+    {"user": "nodiuxdemo15", "pwd": "Liu947"},          # Cina
+    {"user": "nodiuxdemo16", "pwd": "Annan153"},        # Ghana
+    {"user": "nodiuxdemo17", "pwd": "Tagore846"},       # India
+    {"user": "nodiuxdemo18", "pwd": "VonSuttner290"},   # Austria
+    {"user": "nodiuxdemo19", "pwd": "Romer673"},        # USA
+    {"user": "nodiuxdemo20", "pwd": "Sartre415"}        # Francia
+]
 
 # Context
 class Context:
@@ -130,6 +153,18 @@ class PageResources:
         PageResources.kpis, PageResources.top10, PageResources.activity, PageResources.posts = build_kpis(PageResources.df)
 
 
+# login_required decorator
+from flask import redirect, url_for
+from functools import wraps 
+def login_required(f):
+    @wraps(f)
+    def wrapped_function(*args, **kwargs):
+        if "user" not in session:
+            return redirect(url_for("login"))  # se non è loggato, vai al login
+        return f(*args, **kwargs)  # altrimenti, procedi
+    return wrapped_function
+
+
 # my_render_template
 def my_render_template(pagina, **kwargs):
     # Costruisci un dizionario base con sessione e default comuni
@@ -168,6 +203,7 @@ def my_render_template(pagina, **kwargs):
 
 
 # parse_session_data
+@login_required
 def parse_session_data(sessione):
     handle = sessione.get('handle', '')
     mode = sessione. get('mode', '')
@@ -181,6 +217,7 @@ def parse_session_data(sessione):
 
 
 # read_session_data
+@login_required
 def read_session_data():
     sessione = session.get('session_data', {
             'username': '',
@@ -196,6 +233,7 @@ def read_session_data():
 
 
 # build_session
+@login_required
 def build_session(handle, mode, query, username, limit, cached, search_id):
     session = {
             'handle': handle,
@@ -210,6 +248,7 @@ def build_session(handle, mode, query, username, limit, cached, search_id):
 
 
 # handle post method
+@login_required
 def handle_post():
     try:
         ok = True
@@ -260,6 +299,7 @@ def handle_post():
     
 
 # read page resources
+@login_required
 def get_page_resources():
     posts=PageResources.posts = pd.DataFrame([])
 
@@ -281,7 +321,7 @@ def get_page_resources():
         # kpis
         PageResources.build_kpis()
 
-
+@login_required
 def handle_context():
     # session id
     if not Context.session_id:
@@ -327,9 +367,11 @@ def handle_context():
 
     return searches
 
+
 # route index.html /
 @app.route('/index.html', methods=["GET", "POST"])
 @app.route('/', methods=["GET", "POST"])
+@login_required
 def home():
     # read context
     Context.read_context()
@@ -353,6 +395,7 @@ def home():
 
 # route .html
 @app.route('/<page>.html', methods=["GET", "POST"])
+@login_required
 def render_html_page(page):
     print(f"render_html_page {page}")
     try:
@@ -385,8 +428,10 @@ def render_html_page(page):
         return my_render_template('404.html'), 404        
 
 
-# route downloads
+# route downloads --- START
+
 @app.route('/download/mentions.csv')
+@login_required
 def download_mentions_csv():
     Context.read_context()
     searches = handle_context()
@@ -405,6 +450,7 @@ def download_mentions_csv():
     return response
 
 @app.route('/download/mentions.gexf')
+@login_required
 def download_mentions_gexf():
     Context.read_context()
     searches = handle_context()
@@ -419,6 +465,7 @@ def download_mentions_gexf():
     return send_file(gexf_data, mimetype='application/octet-stream', as_attachment=True, download_name='mentions_network.gexf')
 
 @app.route('/download/hashtags.csv')
+@login_required
 def download_hashtags_csv():
     Context.read_context()
     searches = handle_context()
@@ -437,6 +484,7 @@ def download_hashtags_csv():
     return response
 
 @app.route('/download/hashtags.gexf')
+@login_required
 def download_hashtags_gexf():
     Context.read_context()
     searches = handle_context()
@@ -451,6 +499,7 @@ def download_hashtags_gexf():
     return send_file(gexf_data, mimetype='application/octet-stream', as_attachment=True, download_name='hashtags_network.gexf')
 
 @app.route('/download/session_posts.json')
+@login_required
 def download_session_df_json():    
     Context.read_context()
     searches = handle_context()
@@ -468,6 +517,90 @@ def download_session_df_json():
     
     return send_file(buffer, mimetype='application/json', as_attachment=True, download_name='session_posts.json' )
 
+@app.route('/download/collected_posts.csv')
+@login_required
+def download_posts_csv():
+    try:
+        # Verifica se PageResources.posts è vuoto
+        if PageResources.posts is None or PageResources.posts.empty:
+            flash("Nessun post disponibile per il download.", "error")
+            return redirect(url_for("home"))  # Reindirizza alla home se non ci sono dati
+
+        # Trasforma i posts in CSV
+        posts_copia = PageResources.posts.copy()
+        posts_copia['text'] = posts_copia['text'].str.replace(r'[\r\n\u2028\u2029]+', '<br>', regex=True)
+        posts_csv = posts_copia.to_csv(index=False, encoding='utf-8-sig', quotechar='"')
+
+        # Crea la risposta per il download
+        response = make_response(posts_csv)
+        response.headers.set('Content-Disposition', 'attachment', filename='collected_posts.csv')
+        response.headers.set('Content-Type', 'text/csv')
+
+        return response
+
+    except Exception as e:
+        traceback.print_exc()  # Stampa l'errore per debug
+        flash("Errore durante il download dei posts.", "error")
+        return redirect(url_for("home"))  # Reindirizza alla home in caso di errore
+
+@app.route('/download/collected_posts.xlsx')
+@login_required
+def download_posts_xlsx():
+    try:
+        # Verifica se PageResources.posts è vuoto
+        if PageResources.posts is None or PageResources.posts.empty:
+            flash("Nessun post disponibile per il download.", "error")
+            return redirect(url_for("home"))  # Reindirizza alla home se non ci sono dati
+
+        # Trasforma i posts in Excel
+        posts_copia = PageResources.posts.copy()
+
+        # Crea un buffer per il file Excel
+        buffer = BytesIO()
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            posts_copia.to_excel(writer, index=False, sheet_name='Collected Posts')
+
+        # Posiziona il buffer all'inizio
+        buffer.seek(0)
+
+        # Crea la risposta per il download
+        response = make_response(buffer.getvalue())
+        response.headers.set('Content-Disposition', 'attachment', filename='collected_posts.xlsx')
+        response.headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+        return response
+
+    except Exception as e:
+        traceback.print_exc()  # Stampa l'errore per debug
+        flash("Errore durante il download dei posts.", "error")
+        return redirect(url_for("home"))  # Reindirizza alla home in caso di errore
+
+# route downloads --- END
+
+@app.route("/auth-login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        
+        # Trova l'utente nella lista DEMO_USERS
+        user = next((u for u in DEMO_USERS if u["user"] == username), None)
+
+        # Controlla se l'utente esiste e la password corrisponde
+        if user and user["pwd"] == password:
+            session["user"] = username
+            return redirect(url_for("home"))  # Reindirizza a index.html
+        else:
+            flash("Credenziali non valide", "error")
+
+    return render_template("auth-login.html")  # Usa auth-login.html
+
+@app.route("/logout")
+def logout():
+    # Svuota la sessione
+    session.clear()
+    # Reindirizza al login
+    return redirect(url_for("login"))
 
 # route folders/
 @app.route('/img/<path:filename>')

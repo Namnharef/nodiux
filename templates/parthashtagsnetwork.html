@@ -1,19 +1,19 @@
 
                         <div id="loading-indicator" style="
-                            position: absolute; top: 50%; left: 50%; 
+                            position: absolute; top: 50%; left: 50%;
                             transform: translate(-50%, -50%);
                             font-weight: bold; font-size: 1.2rem; color: #007bff;
                             z-index: 10;
                             ">
-                            Caricamento grafico<span id="dots"></span>
+                            Loading<span id="dots"></span>
                         </div>
                         <div class="card-body text-center">
                             {% if hashtags_graph %}
                             {{ hashtags_graph | safe }}
-                            {% endif %}                                
+                            {% endif %}
                         </div>
 
-						
+
 <script>
   // Puntini animati
   let dots = 0;

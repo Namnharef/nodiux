@@ -1,32 +1,28 @@
-							<!-- Chart ploty include -->
-							<script src="https://cdn.plot.ly/plotly-3.0.1.min.js" charset="utf-8"></script>
+<!-- Chart plotly include -->
+<script src="https://cdn.plot.ly/plotly-3.0.1.min.js" charset="utf-8"></script>
 
-
-							<!-- Area Chart -->
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Area Chart</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div id="activity-chart" class="chart-area" >                                        
-										<script>
-											const months = {{ activity | tojson | safe }};
-											const trace1 = {
-												x: months.map(x => x.time),
-												y: months.map(x => x.post_count),
-												mode: 'lines',
-												name: 'Original',
-												line: { color: 'lightblue' }
-											};
-											const trace2 = {
-												x: months.map(x => x.time),
-												y: months.map(x => x.rolling),
-												mode: 'lines',
-												name: 'Rolling avg',
-												line: { color: 'blue' }
-											};
-											Plotly.newPlot('activity-chart', [trace1, trace2], {margin:{t:0}});
-										</script>
-                                    </div>
-                                </div>
-                            </div>
+<!-- Bar Chart -->
+<div class="card mb-4 border-0 shadow-none">
+  <div class="card-body">
+    <div id="activity-chart" class="chart-area"></div>
+    <script>
+      const months = {{ activity | tojson | safe }};
+      const trace1 = {
+        x: months.map(x => x.time),
+        y: months.map(x => x.post_count),
+        type: 'bar',
+        name: 'Posts',
+        color: 'rgba(55, 76, 106, 0.6)',  // colore blu ardesia semi-trasparente
+      };
+      Plotly.newPlot('activity-chart', [trace1], {
+      margin: { t: 0, r: 0, l: 40, b:30},
+      bargap: 0.2,
+      xaxis: { title: 'Date'},
+      yaxis: { title: 'Number of Posts' }
+      }, {
+  responsive: true,
+  displayModeBar: false
+});
+    </script>
+  </div>
+</div>
