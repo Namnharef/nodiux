@@ -1,0 +1,18 @@
+26/06/2025
+ - Nuova sessione
+ + Portare su pythonanywhere
+ - Selettore 1000, 2000, 3000
+ - Ricerca in background
+ - Riprendere una vecchia ricerca
+ - Rinfrescare una vecchia ricerca
+
+
+
+ - chiunque da 100
+ - 1000 paywall
+ - ... 50000 max
+
+
+ - topic analisys lda
+
+ - riassunti llm dei più pesanti

@@ -1,0 +1,9 @@
+Flask>=2.3.0
+pandas>=2.0
+emoji
+pyvis
+networkx
+python-louvain
+atproto
+plotly
+requests

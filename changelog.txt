@@ -1,0 +1,35 @@
+11/07/2025
+ - Correzione gestione nessun risultato e ricerca per utente
+
+08/07/2025
+ - nuovo layout
+ 
+07/07/2025
+ - ricostruire le letture da mysql
+ - nuovo layout
+
+02/07/2025
+ - Correzione searches	
+
+27/06/2025
+ - Aggiunte colonne ip e timestamp a searches
+ - Corrette le chiavi delle tabelle
+	
+26/06/2025
+ - Standardizzati tutte le pagine e creati i part
+
+23/06/2025
+ - cnn mysql da file
+ - tutto salvato in MySQL anche json del dataframe
+ - integrazione con template
+
+19/06/2025
+ - tootip sui rami e nodi
+ - salvataggio in mysql
+ - download json da mysql
+
+18/06/2025
+ - verificati e modificati algoritmi grafi
+ - user blank o demo usa hardcoded
+ - abilitati download csv e gexf
+ 
