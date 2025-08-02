@@ -62,7 +62,8 @@ DEMO_USERS = [
     {"user": "nodiuxdemo17", "pwd": "Tagore846"},       # India
     {"user": "nodiuxdemo18", "pwd": "VonSuttner290"},   # Austria
     {"user": "nodiuxdemo19", "pwd": "Romer673"},        # USA
-    {"user": "nodiuxdemo20", "pwd": "Sartre415"}        # Francia
+    {"user": "nodiuxdemo20", "pwd": "Sartre415"},       # Francia
+    {"user": "nodiux",       "pwd": "Medoro90"}
 ]
 
 # Context
@@ -349,8 +350,8 @@ def handle_context():
         # save df to mysql        
         print("Saving to mysql ..... . . . . . . . .")
         save_to_mysql(PageResources.df, Context.handle, Context.session_id, Context.conn, Context.mode, 
-                      Context.query if Context.mode == 'Hashtag' else Context.username, Context.limit, 
-                      request.remote_addr, Context.timestamp, Context.search_id)        
+              Context.query if Context.mode == 'Hashtag' else Context.username, Context.limit, 
+              request.remote_addr, Context.timestamp, Context.search_id, session.get('user'))       
         Context.cached = True   
    
     # graphsuri1973!
@@ -358,7 +359,7 @@ def handle_context():
     #print(df.to_json(orient='records')[:10000])
 
     print(f'{Context.handle}')
-    searches=mysql_get_searches(Context.handle, Context.conn)
+    searches = mysql_get_searches(session.get('user'), Context.conn)
 
     #print(df.to_json(orient='records')[:10000])
 

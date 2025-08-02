@@ -9,7 +9,7 @@ SQL_SEARCHES = '''
         SELECT s.*, sc.cid
         FROM searches s
         LEFT OUTER JOIN searches_cids sc ON s.session_id = sc.session_id AND s.search_id = sc.search_id
-        WHERE bluesky_handle = %s
+        WHERE user = %s
     )
     SELECT p.*, h.hashtags, m.mentions, u.users, e.emojis
     FROM ( 
@@ -106,6 +106,7 @@ def mysql_create_tables(conn):
             ip_address VARCHAR(45),
             timestamp DATETIME,
             search_id VARCHAR(255),
+            user VARCHAR(100),
             PRIMARY KEY (session_id, search_id)
         )
     ''')
@@ -124,16 +125,16 @@ def mysql_create_tables(conn):
     return None
     
     
-def save_to_mysql(df, bluesky_handle, session_id, conn, mode, query, limit, ip_address, timestamp, search_id):
+def save_to_mysql(df, bluesky_handle, session_id, conn, mode, query, limit, ip_address, timestamp, search_id, user):
     cursor = conn.cursor()
 
     # Insert data      
     cursor.execute('''
         INSERT IGNORE INTO searches
-        (bluesky_handle, session_id, mode, query, resultlimit, ip_address, timestamp, search_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    ''', (bluesky_handle, session_id, mode, query, limit, ip_address, timestamp, search_id))
-    
+        (bluesky_handle, session_id, mode, query, resultlimit, ip_address, timestamp, search_id, user)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (bluesky_handle, session_id, mode, query, limit, ip_address, timestamp, search_id, user))
+        
     if df is not None and not df.empty:
         for _, post in df.iterrows():
             cursor.execute('''
@@ -230,14 +231,14 @@ def mysql_connect(host, user, password, database):
     return conn
 
 
-def mysql_get_searches(handle, conn):
+def mysql_get_searches(user, conn):
     searches = []
     cursor = conn.cursor()
 
     # Prima seleziono i post base
     mySqlCmd = SQL_SEARCHES
     print(f"{mySqlCmd}")
-    cursor.execute(mySqlCmd, (handle,))
+    cursor.execute(SQL_SEARCHES, (user,))
     searches_data = cursor.fetchall()
     print(f"{len(searches_data)} risultati trovati")
     # bluesky_handle, session_id, mode, query, resultlimit, ip_address, timestamp, search_id, posts, hashtags, mentions, users, emojis

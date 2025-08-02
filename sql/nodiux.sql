@@ -167,5 +167,6 @@ select * from hashtags;
 
 select * from searches;
 
-
+ALTER TABLE searches ADD COLUMN user VARCHAR(100);
+UPDATE searches SET user = 'nodiux' WHERE user IS NULL 
 

@@ -1,3 +1,11 @@
+TODO:
+ - ALTER TABLE searches ADD COLUMN user VARCHAR(100);
+ - UPDATE searches SET user = 'admin' WHERE user IS NULL;
+
+02/08/2025
+ - Gestione utenti demo
+ - Download posts csv e xlsx
+ 
 11/07/2025
  - Correzione gestione nessun risultato e ricerca per utente
 
