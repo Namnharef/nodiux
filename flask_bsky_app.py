@@ -9,7 +9,7 @@ import io
 import networkx as nx
 import uuid
 from backend.db_utils import mysql_connect, mysql_create_tables, load_from_mysql, save_to_mysql #, sql_delete_df, sql_save_df, sql_read_df
-from backend.db_utils import mysql_get_searches
+from backend.db_utils import mysql_get_searches, validate_user
 from io import BytesIO
 from flask import send_from_directory
 import traceback
@@ -42,30 +42,6 @@ MAX_LIMIT=10000
 
 print(f"Config: {config}")
 
-DEMO_USERS = [
-    {"user": "nodiuxdemo1", "pwd": "Malala431"},        # Pakistan
-    {"user": "nodiuxdemo2", "pwd": "Mandela782"},       # Sudafrica
-    {"user": "nodiuxdemo3", "pwd": "Camus159"},         # Algeria/Francia
-    {"user": "nodiuxdemo4", "pwd": "Maathai624"},       # Kenya
-    {"user": "nodiuxdemo5", "pwd": "Menchu947"},        # Guatemala
-    {"user": "nodiuxdemo6", "pwd": "Murad318"},         # Iraq
-    {"user": "nodiuxdemo7", "pwd": "Ressa506"},         # Filippine
-    {"user": "nodiuxdemo8", "pwd": "Tutu893"},          # Sudafrica
-    {"user": "nodiuxdemo9", "pwd": "Pamuk274"},         # Turchia
-    {"user": "nodiuxdemo10", "pwd": "Morrison635"},     # USA
-    {"user": "nodiuxdemo11", "pwd": "Karman482"},       # Yemen
-    {"user": "nodiuxdemo12", "pwd": "Yunus719"},        # Bangladesh
-    {"user": "nodiuxdemo13", "pwd": "Ebadi364"},        # Iran
-    {"user": "nodiuxdemo14", "pwd": "Gbowee528"},       # Liberia
-    {"user": "nodiuxdemo15", "pwd": "Liu947"},          # Cina
-    {"user": "nodiuxdemo16", "pwd": "Annan153"},        # Ghana
-    {"user": "nodiuxdemo17", "pwd": "Tagore846"},       # India
-    {"user": "nodiuxdemo18", "pwd": "VonSuttner290"},   # Austria
-    {"user": "nodiuxdemo19", "pwd": "Romer673"},        # USA
-    {"user": "nodiuxdemo20", "pwd": "Sartre415"},       # Francia
-    {"user": "nodiux",       "pwd": "Medoro90"}
-]
-
 # Context
 class Context:
     conn = None
@@ -87,17 +63,23 @@ class Context:
         mysql_create_tables(Context.conn)
 
         Context.sessione = read_session_data()
+        print(f"1 {Context.sessione}")
+
         ( 
             Context.handle, Context.mode, Context.query, Context.username,
             Context.limit, Context.cached, Context.search_id
         )  = parse_session_data(Context.sessione)
 
+        print(f"2 {Context.sessione}")
+
         Context.session_id = session.get('session_id', '')
+
+        print(f"3 {Context.sessione}")
 
         print(f'''read_context handle={Context.handle}, mode={Context.mode}, query={Context.query}, 
               limit={Context.limit}, cached={Context.cached}''')
         print(f"read_context session_id={Context.session_id}")
-        print(f"{Context.sessione}")
+
         #print(f"read_context context={Context}")
 
 
@@ -134,7 +116,7 @@ class PageResources:
     df = None
     error = None
 
-    def fetch_posts():
+    def fetch_posts():        
         PageResources.df, PageResources.error = fetch_posts(Context.handle, Context.app_pwd, Context.mode, 
                                                             Context.query if Context.mode == 'Hashtag' else Context.username, 
                                                             Context.limit)
@@ -322,6 +304,8 @@ def get_page_resources():
         # kpis
         PageResources.build_kpis()
 
+
+# handle context
 @login_required
 def handle_context():
     # session id
@@ -428,9 +412,48 @@ def render_html_page(page):
         # Se il file non esiste, torna un 404 personalizzato o il default
         return my_render_template('404.html'), 404        
 
+# route progress
+from flask import jsonify
+@app.route('/fetch_progress')
+@login_required
+def fetch_progress():
+    return jsonify({'progress': session.get('fetch_posts_progress', 0)})
 
-# route downloads --- START
 
+# route auth-login
+@app.route("/auth-login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        
+        # Valida l'utente
+        conn = mysql_connect(config["MYSQL_HOST"], config["MYSQL_USER"], MYSQL_PWD, config["MYSQL_DB"])
+        user = validate_user(username, password, conn)
+
+        # close mysql connection
+        conn.close()
+
+        # Controlla se l'utente esiste e la password corrisponde
+        if not user:
+            return my_render_template(HOME, error="Credenziali non valide")
+        else:
+            session["user"] = username
+            return redirect(url_for("home"))  # Reindirizza a index.html
+
+    return render_template("auth-login.html")  # Usa auth-login.html
+
+
+# route auth-logout
+@app.route("/logout")
+def logout():
+    # Svuota la sessione
+    session.clear()
+    # Reindirizza al login
+    return redirect(url_for("login"))
+
+
+# route downloads
 @app.route('/download/mentions.csv')
 @login_required
 def download_mentions_csv():
@@ -576,32 +599,6 @@ def download_posts_xlsx():
         flash("Errore durante il download dei posts.", "error")
         return redirect(url_for("home"))  # Reindirizza alla home in caso di errore
 
-# route downloads --- END
-
-@app.route("/auth-login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        
-        # Trova l'utente nella lista DEMO_USERS
-        user = next((u for u in DEMO_USERS if u["user"] == username), None)
-
-        # Controlla se l'utente esiste e la password corrisponde
-        if user and user["pwd"] == password:
-            session["user"] = username
-            return redirect(url_for("home"))  # Reindirizza a index.html
-        else:
-            flash("Credenziali non valide", "error")
-
-    return render_template("auth-login.html")  # Usa auth-login.html
-
-@app.route("/logout")
-def logout():
-    # Svuota la sessione
-    session.clear()
-    # Reindirizza al login
-    return redirect(url_for("login"))
 
 # route folders/
 @app.route('/img/<path:filename>')

@@ -4,6 +4,11 @@ import numpy as np
 import mysql.connector
 from datetime import datetime
 
+# Patch temporanea per compatibilità con numpy 2.0
+if not hasattr(np, 'float_'):
+    np.float_ = np.float64
+
+# SQL query to get searches
 SQL_SEARCHES = '''
     WITH filtered_searches_cids AS (
         SELECT s.*, sc.cid
@@ -48,11 +53,8 @@ SQL_SEARCHES = '''
     ORDER BY p.timestamp DESC 
 '''
 
-# Patch temporanea per compatibilità con numpy 2.0
-if not hasattr(np, 'float_'):
-    np.float_ = np.float64
 
-
+# Create MySQL tables
 def mysql_create_tables(conn):
     cursor = conn.cursor()
 
@@ -66,7 +68,7 @@ def mysql_create_tables(conn):
             author_display_name TEXT,
             created_at DATETIME,
             text TEXT
-        )
+        );
     ''')
 
     cursor.execute('''
@@ -75,7 +77,7 @@ def mysql_create_tables(conn):
             handle VARCHAR (255),
             PRIMARY KEY (cid, handle),
             FOREIGN KEY (cid) REFERENCES posts(cid)
-        )
+        );
     ''')
 
     cursor.execute('''
@@ -84,7 +86,7 @@ def mysql_create_tables(conn):
             hashtag VARCHAR(255),
             PRIMARY KEY (cid, hashtag),
             FOREIGN KEY (cid) REFERENCES posts(cid)
-        )
+        );
     ''')
 
     cursor.execute('''
@@ -93,7 +95,7 @@ def mysql_create_tables(conn):
             emoji VARCHAR(100),
             PRIMARY KEY (cid, emoji),
             FOREIGN KEY (cid) REFERENCES posts(cid)
-        )
+        );
     ''')
 
     cursor.execute('''
@@ -108,7 +110,7 @@ def mysql_create_tables(conn):
             search_id VARCHAR(255),
             user VARCHAR(100),
             PRIMARY KEY (session_id, search_id)
-        )
+        );
     ''')
     
     cursor.execute('''
@@ -119,12 +121,20 @@ def mysql_create_tables(conn):
             PRIMARY KEY (session_id, search_id, cid),
             FOREIGN KEY (cid) REFERENCES posts(cid),
             FOREIGN KEY (session_id, search_id) REFERENCES searches(session_id, search_id)
-        )
+        );
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            username VARCHAR(255) PRIMARY KEY,
+            password VARCHAR(255) NOT NULL
+        );
     ''')
 
     return None
     
-    
+
+# Save posts to MySQL    
 def save_to_mysql(df, bluesky_handle, session_id, conn, mode, query, limit, ip_address, timestamp, search_id, user):
     cursor = conn.cursor()
 
@@ -165,6 +175,7 @@ def save_to_mysql(df, bluesky_handle, session_id, conn, mode, query, limit, ip_a
     return None
 
 
+# Load posts from MySQL
 def load_from_mysql(session_id, conn, search_id):
     posts = []
     cursor = conn.cursor()
@@ -221,6 +232,7 @@ def load_from_mysql(session_id, conn, search_id):
     return df
 
 
+# Connect to MySQL
 def mysql_connect(host, user, password, database):
     conn = mysql.connector.connect(
         host = host,
@@ -231,6 +243,7 @@ def mysql_connect(host, user, password, database):
     return conn
 
 
+# Get searches from MySQL
 def mysql_get_searches(user, conn):
     searches = []
     cursor = conn.cursor()
@@ -265,4 +278,10 @@ def mysql_get_searches(user, conn):
     cursor.close()
     
     return searches
-    
+
+
+# Validate user credentials
+def validate_user(username, password, conn):
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM users WHERE username = %s AND password = %s", (username, password))
+    return cursor.fetchone()
