@@ -1,5 +1,6 @@
 03/08/2025
  - Users in sql
+ - Tutte le pwd e configurazioni in config.jsonc
 
 02/08/2025
  - Gestione utenti demo

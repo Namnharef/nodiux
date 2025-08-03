@@ -250,10 +250,10 @@ def mysql_get_searches(user, conn):
 
     # Prima seleziono i post base
     mySqlCmd = SQL_SEARCHES
-    print(f"{mySqlCmd}")
+    # print(f"mysql_get_searches {mySqlCmd}")
     cursor.execute(SQL_SEARCHES, (user,))
     searches_data = cursor.fetchall()
-    print(f"{len(searches_data)} risultati trovati")
+    print(f"mysql_get_searches {len(searches_data)} risultati trovati")
     # bluesky_handle, session_id, mode, query, resultlimit, ip_address, timestamp, search_id, posts, hashtags, mentions, users, emojis
     #'nodiux.bsky.social', '356b522e-8650-4eaf-9873-a23d1b139aa4', 'Hashtag', 'brexit', '222', '127.0.0.1', '2025-07-03 16:59:34', '566f0310-7e5c-47f2-abc8-0079dca83507', '222', '737', '40'
     for search_row in searches_data:

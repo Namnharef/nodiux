@@ -1,78 +1,38 @@
 # app.py
-from flask import Flask, render_template, request, session, flash
-from backend.bluesky_client import fetch_posts
-from backend.graph_utils import build_networks, build_kpis, build_hashtag_csv_gexf, build_mentions_csv_gexf
+# from backend.bluesky_client import fetch_posts
+# from backend.graph_utils import build_networks, build_kpis, build_hashtag_csv_gexf, build_mentions_csv_gexf
+# from backend.db_utils import mysql_connect #, mysql_create_tables, load_from_mysql, save_to_mysql #, sql_delete_df, sql_save_df, sql_read_df
+# from backend.db_utils import validate_user #, mysql_get_searches
+from backend.config import CONFIG, DEMO_HANDLE, DEMO_APP_PWD, HOME, MAX_LIMIT 
+from backend.context import Context, PageResources, handle_context
+from backend.my_render_template import my_render_template
+from backend.decorators import login_required
+
+import backend.route_folders
+import backend.downloads 
+import backend.auth_login_logout
+
+from flask import Flask, render_template, request, session #, flash, redirect, url_for
+# from flask import Blueprint, send_file, make_response
+# from flask import send_from_directory
 import pandas as pd
 import os
-from flask import Blueprint, send_file, make_response
-import io
-import networkx as nx
+# import io
+# from io import BytesIO
+# import networkx as nx
 import uuid
-from backend.db_utils import mysql_connect, mysql_create_tables, load_from_mysql, save_to_mysql #, sql_delete_df, sql_save_df, sql_read_df
-from backend.db_utils import mysql_get_searches, validate_user
-from io import BytesIO
-from flask import send_from_directory
 import traceback
 from datetime import datetime
 
 app = Flask(__name__)
 
-#Legge le impostazioni SQL
-import json5
-with open("config.jsonc") as f:
-    config = json5.load(f)
+app.secret_key = CONFIG["SECRET_KEY"]
 
-app.secret_key = config["SECRET_KEY"]
+app.register_blueprint(backend.downloads.downloads)
+app.register_blueprint(backend.route_folders.route_folders)
+app.register_blueprint(backend.auth_login_logout.auth_login_logout)
 
-HOME = config["HOME"]
-
-MAX_LIMIT = config["MAX_LIMIT"]
-
-DEMO_HANDLE = config["DEMO_HANDLE"]
-DEMO_APP_PWD = config["DEMO_APP_PWD"]
-
-
-print(f"Config: {config}")
-
-# Context
-class Context:
-    conn = None
-    sessione = None
-    handle = ''
-    mode = ''
-    query = ''
-    username = ''
-    limit = 0
-    cached = False
-    search_id = ''
-    session_id = ''
-    app_pwd = ''
-
-    @staticmethod
-    def read_context():
-        # Connessione
-        Context.conn = mysql_connect(config["MYSQL_HOST"], config["MYSQL_USER"], config["MYSQL_PWD"], config["MYSQL_DB"])
-        mysql_create_tables(Context.conn)
-
-        Context.sessione = read_session_data()
-        print(f"1 {Context.sessione}")
-
-        ( 
-            Context.handle, Context.mode, Context.query, Context.username,
-            Context.limit, Context.cached, Context.search_id
-        )  = parse_session_data(Context.sessione)
-
-        print(f"2 {Context.sessione}")
-
-        Context.session_id = session.get('session_id', '')
-
-        print(f"3 {Context.sessione}")
-
-        print(f'''read_context handle={Context.handle}, mode={Context.mode}, query={Context.query}, 
-              limit={Context.limit}, cached={Context.cached}''')
-        print(f"read_context session_id={Context.session_id}")
-
-        #print(f"read_context context={Context}")
+# print(app.url_map)
 
 
 # Parameters
@@ -95,116 +55,6 @@ class Parameters:
         Parameters.limit = int(request.values.get('limit', '0'))
         Parameters.search_id = request.values.get('search_id', '')
         Parameters.session_id = request.values.get('session_id', '')
-
-
-# Page resources
-class PageResources:
-    graph_mentions = None
-    graph_hashtags = None
-    kpis = None
-    top10 = None
-    activity = None
-    posts = None
-    df = None
-    error = None
-
-    def fetch_posts():        
-        PageResources.df, PageResources.error = fetch_posts(Context.handle, Context.app_pwd, Context.mode, 
-                                                            Context.query if Context.mode == 'Hashtag' else Context.username, 
-                                                            Context.limit)
-
-    def load_from_sql():
-        print('load_from_sql')        
-        if Context.search_id:
-            PageResources.df = load_from_mysql(Context.session_id, Context.conn, Context.search_id)
-        else:
-            print('load_from_sql no search_id')
-            PageResources.df = pd.DataFrame([])
-
-    def build_networks():
-        PageResources.graph_mentions, PageResources.graph_hashtags = build_networks(PageResources.df)
-    
-    def build_kpis():
-        PageResources.kpis, PageResources.top10, PageResources.activity, PageResources.posts = build_kpis(PageResources.df)
-
-
-# login_required decorator
-from flask import redirect, url_for
-from functools import wraps 
-def login_required(f):
-    @wraps(f)
-    def wrapped_function(*args, **kwargs):
-        if "user" not in session:
-            return redirect(url_for("login"))  # se non è loggato, vai al login
-        return f(*args, **kwargs)  # altrimenti, procedi
-    return wrapped_function
-
-
-# my_render_template
-def my_render_template(pagina, **kwargs):
-    # Costruisci un dizionario base con sessione e default comuni
-    base_context = {
-        'sessione': {
-                'username': session.get('username', ''),
-                'mode': session.get('mode', 'Hashtag'),
-                'query': session.get('query', ''),
-                'limit': session.get('limit', 100)
-            },
-        'kpis': {
-                "posts": 0,
-                "users": 0,
-                "mentions": 0,
-                "hashtags": 0
-            },
-        'top10': {
-                "active_users" : {},
-                "emojis" : {},
-                "hashtags" : {},
-                "mentions" : {}
-            },
-        'mentions_graph': None,
-        'hashtags_graph': None,
-        'activity': None,
-        'posts': [],
-        'error': None
-    }
-
-    # Aggiorna con eventuali override passati al momento della chiamata
-    base_context.update(kwargs)
-    #print(f"{base_context}")
-
-    # Renderizza
-    return render_template(pagina, **base_context)
-
-
-# parse_session_data
-@login_required
-def parse_session_data(sessione):
-    handle = sessione.get('handle', '')
-    mode = sessione. get('mode', '')
-    username = sessione.get('username', '')
-    query = sessione.get('query', '')
-    limit = sessione.get('limit', 0)
-    cached = sessione.get('cached', False)
-    search_id = sessione.get('search_id', '')
-    
-    return handle, mode, query, username, limit, cached, search_id
-
-
-# read_session_data
-@login_required
-def read_session_data():
-    sessione = session.get('session_data', {
-            'username': '',
-            'mode': '',
-            'query': '',
-            'username': '',
-            'limit': 0,
-            'cached': False,
-            'search_id': ''
-        })
-    #print(f"read_session_data {sessione}")
-    return sessione
 
 
 # build_session
@@ -273,78 +123,6 @@ def handle_post():
     return ok
     
 
-# read page resources
-@login_required
-def get_page_resources():
-    posts=PageResources.posts = pd.DataFrame([])
-
-    print(f"get_page_resources Context.cached {Context.cached}")
-
-    if not Context.cached:
-        # fetch posts
-        PageResources.fetch_posts()                        
-    else:
-        PageResources.error = None
-        PageResources.load_from_sql()
-
-    if not PageResources.error:
-        #print(f"home df.count={PageResources.df.count}")    
-
-        # networks
-        PageResources.build_networks()
-
-        # kpis
-        PageResources.build_kpis()
-
-
-# handle context
-@login_required
-def handle_context():
-    # session id
-    if not Context.session_id:
-        print("New context seassion_id")        
-        Context.session_id = str(uuid.uuid4())
-        session['session_id'] = Context.session_id  
-
-        if not Context.handle or Context.handle.lower() == 'demo' or Context.handle.lower() == DEMO_HANDLE.lower():
-            Context.app_pwd = DEMO_APP_PWD          # NO CONTEXT
-            Context.handle = DEMO_HANDLE
-            Context.cached = True
-
-    print(f"session_id {Context.session_id}")
-    print(f"search_id {Context.search_id}")
-
-    # get page resources
-    get_page_resources()
-
-    # error
-    if PageResources.error:
-        print(f"home error={PageResources.error}")
-        #return my_render_template(HOME, error=PageResources.error)   
-
-    if not Context.cached:
-        # save df to mysql        
-        print("Saving to mysql ..... . . . . . . . .")
-        save_to_mysql(PageResources.df, Context.handle, Context.session_id, Context.conn, Context.mode, 
-              Context.query if Context.mode == 'Hashtag' else Context.username, Context.limit, 
-              request.remote_addr, Context.timestamp, Context.search_id, session.get('user'))       
-        Context.cached = True   
-   
-    # graphsuri1973!
-    
-    #print(df.to_json(orient='records')[:10000])
-
-    print(f'{Context.handle}')
-    searches = mysql_get_searches(session.get('user'), Context.conn)
-
-    #print(df.to_json(orient='records')[:10000])
-
-    Context.sessione['cached'] = Context.cached
-    session['session_data'] = Context.sessione
-
-    return searches
-
-
 # route index.html /
 @app.route('/index.html', methods=["GET", "POST"])
 @app.route('/', methods=["GET", "POST"])
@@ -404,222 +182,13 @@ def render_html_page(page):
         # Se il file non esiste, torna un 404 personalizzato o il default
         return my_render_template('404.html'), 404        
 
+
 # route progress
 from flask import jsonify
 @app.route('/fetch_progress')
 @login_required
 def fetch_progress():
     return jsonify({'progress': session.get('fetch_posts_progress', 0)})
-
-
-# route auth-login
-@app.route("/auth-login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        
-        # Valida l'utente
-        conn = mysql_connect(config["MYSQL_HOST"], config["MYSQL_USER"], config["MYSQL_PWD"], config["MYSQL_DB"])
-        user = validate_user(username, password, conn)
-
-        # close mysql connection
-        conn.close()
-
-        # Controlla se l'utente esiste e la password corrisponde
-        if not user:
-            return my_render_template(HOME, error="Credenziali non valide")
-        else:
-            session["user"] = username
-            return redirect(url_for("home"))  # Reindirizza a index.html
-
-    return render_template("auth-login.html")  # Usa auth-login.html
-
-
-# route auth-logout
-@app.route("/logout")
-def logout():
-    # Svuota la sessione
-    session.clear()
-    # Reindirizza al login
-    return redirect(url_for("login"))
-
-
-# route downloads
-@app.route('/download/mentions.csv')
-@login_required
-def download_mentions_csv():
-    Context.read_context()
-    searches = handle_context()
-
-    df = load_from_mysql(Context.session_id, Context.conn, Context.search_id)  
-    print(f"session_id:{Context.session_id} search_id:{Context.search_id} query:{Context.query}")
-    csv_edges, gexf_data = build_mentions_csv_gexf(df)
-    
-    # close mysql connection
-    Context.conn.close()
-
-    # Genera i dati
-    response = make_response(csv_edges)    
-    response.headers.set('Content-Disposition', 'attachment', filename='mentions_edge_list.csv')
-    response.headers.set('Content-Type', 'text/csv')
-    return response
-
-@app.route('/download/mentions.gexf')
-@login_required
-def download_mentions_gexf():
-    Context.read_context()
-    searches = handle_context()
-
-    df = load_from_mysql(Context.session_id, Context.conn, Context.search_id)  
-    print(f"session_id:{Context.session_id} search_id:{Context.search_id} query:{Context.query}")
-    csv_edges, gexf_data = build_mentions_csv_gexf(df)
-    
-    # close mysql connection
-    Context.conn.close()
-    
-    return send_file(gexf_data, mimetype='application/octet-stream', as_attachment=True, download_name='mentions_network.gexf')
-
-@app.route('/download/hashtags.csv')
-@login_required
-def download_hashtags_csv():
-    Context.read_context()
-    searches = handle_context()
-
-    df = load_from_mysql(Context.session_id, Context.conn, Context.search_id)  
-    print(f"session_id:{Context.session_id} search_id:{Context.search_id} query:{Context.query}")
-    csv_edges, gexf_data = build_hashtag_csv_gexf(df)
-
-    # close mysql connection
-    Context.conn.close()
-       
-    # Genera i dati
-    response = make_response(csv_edges)
-    response.headers.set('Content-Disposition', 'attachment', filename='hashtags_edge_list.csv')
-    response.headers.set('Content-Type', 'text/csv')
-    return response
-
-@app.route('/download/hashtags.gexf')
-@login_required
-def download_hashtags_gexf():
-    Context.read_context()
-    searches = handle_context()
-
-    df = load_from_mysql(Context.session_id, Context.conn, Context.search_id)  
-    print(f"session_id:{Context.session_id} search_id:{Context.search_id} query:{Context.query}")
-    csv_edges, gexf_data = build_hashtag_csv_gexf(df)
-
-    # close mysql connection
-    Context.conn.close()
-    
-    return send_file(gexf_data, mimetype='application/octet-stream', as_attachment=True, download_name='hashtags_network.gexf')
-
-@app.route('/download/session_posts.json')
-@login_required
-def download_session_df_json():    
-    Context.read_context()
-    searches = handle_context()
-
-    df = load_from_mysql(Context.session_id, Context.conn, Context.search_id)  
-    print(f"session_id:{Context.session_id} search_id:{Context.search_id} query:{Context.query}")
-
-    # close mysql connection
-    Context.conn.close()
-    
-    df_json = df.to_json(orient='records')
-    
-    buffer = BytesIO(df_json.encode('utf-8'))
-    buffer.seek(0)
-    
-    return send_file(buffer, mimetype='application/json', as_attachment=True, download_name='session_posts.json' )
-
-@app.route('/download/collected_posts.csv')
-@login_required
-def download_posts_csv():
-    try:
-        # Verifica se PageResources.posts è vuoto
-        if PageResources.posts is None or PageResources.posts.empty:
-            flash("Nessun post disponibile per il download.", "error")
-            return redirect(url_for("home"))  # Reindirizza alla home se non ci sono dati
-
-        # Trasforma i posts in CSV
-        posts_copia = PageResources.posts.copy()
-        posts_copia['text'] = posts_copia['text'].str.replace(r'[\r\n\u2028\u2029]+', '<br>', regex=True)
-        posts_csv = posts_copia.to_csv(index=False, encoding='utf-8-sig', quotechar='"')
-
-        # Crea la risposta per il download
-        response = make_response(posts_csv)
-        response.headers.set('Content-Disposition', 'attachment', filename='collected_posts.csv')
-        response.headers.set('Content-Type', 'text/csv')
-
-        return response
-
-    except Exception as e:
-        traceback.print_exc()  # Stampa l'errore per debug
-        flash("Errore durante il download dei posts.", "error")
-        return redirect(url_for("home"))  # Reindirizza alla home in caso di errore
-
-@app.route('/download/collected_posts.xlsx')
-@login_required
-def download_posts_xlsx():
-    try:
-        # Verifica se PageResources.posts è vuoto
-        if PageResources.posts is None or PageResources.posts.empty:
-            flash("Nessun post disponibile per il download.", "error")
-            return redirect(url_for("home"))  # Reindirizza alla home se non ci sono dati
-
-        # Trasforma i posts in Excel
-        posts_copia = PageResources.posts.copy()
-
-        # Crea un buffer per il file Excel
-        buffer = BytesIO()
-        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-            posts_copia.to_excel(writer, index=False, sheet_name='Collected Posts')
-
-        # Posiziona il buffer all'inizio
-        buffer.seek(0)
-
-        # Crea la risposta per il download
-        response = make_response(buffer.getvalue())
-        response.headers.set('Content-Disposition', 'attachment', filename='collected_posts.xlsx')
-        response.headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-
-        return response
-
-    except Exception as e:
-        traceback.print_exc()  # Stampa l'errore per debug
-        flash("Errore durante il download dei posts.", "error")
-        return redirect(url_for("home"))  # Reindirizza alla home in caso di errore
-
-
-# route folders/
-@app.route('/img/<path:filename>')
-def img(filename):
-    return send_from_directory('templates/img', filename)
-@app.route('/vendor/<path:filename>')
-def vendor(filename):
-    return send_from_directory('templates/vendor', filename)
-@app.route('/css/<path:filename>')
-def css(filename):
-    return send_from_directory('templates/css', filename) 
-@app.route('/js/<path:filename>')
-def js(filename):
-    return send_from_directory('templates/js', filename)
-@app.route('/lib/bindings/<path:filename>')
-def lib_bindings(filename):
-    return send_from_directory('templates/lib/bindings', filename)
-@app.route('/assets/avatars/<path:filename>')
-def assets_avatars(filename):
-    return send_from_directory('templates/assets/avatars', filename)
-@app.route('/fonts/<path:filename>')
-def fonts(filename):
-    return send_from_directory('templates/fonts', filename)
-@app.route('/assets/images/<path:filename>')
-def assets_images(filename):
-    return send_from_directory('templates/assets/images', filename)
-@app.route('/.well-known/appspecific/<path:filename>')
-def well_known_appspecific(filename):
-    return send_from_directory('templates/.well-known/appspecific', filename)
 
 
 if __name__ == '__main__':
