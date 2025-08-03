@@ -14,31 +14,23 @@ from io import BytesIO
 from flask import send_from_directory
 import traceback
 from datetime import datetime
-import json
 
 app = Flask(__name__)
-app.secret_key = "DFGGRE£$%ERDFG$£%"
 
 #Legge le impostazioni SQL
-with open("mysql_conn.json") as f:
-    config = json.load(f)
+import json5
+with open("config.jsonc") as f:
+    config = json5.load(f)
 
-#MYSQL_HOST = 'localhost'
-#MYSQL_USER = 'nodiux'
-#MYSQL_PWD = 'Medoro90'
-#MYSQL_DB = 'nodiux'
+app.secret_key = config["SECRET_KEY"]
 
-#MYSQL_HOST = 'nodiux.mysql.pythonanywhere-services.com'
-#MYSQL_USER = 'nodiux'
-MYSQL_PWD = 'Medoro90'
-#MYSQL_DB = 'nodiux$nodiux'
+HOME = config["HOME"]
 
-HOME = 'index.html'
+MAX_LIMIT = config["MAX_LIMIT"]
 
-DEMO_HANDLE = 'nodiux.bsky.social'
-DEMO_APP_PWD = '42fc-xq6u-p2qh-tlm5'
+DEMO_HANDLE = config["DEMO_HANDLE"]
+DEMO_APP_PWD = config["DEMO_APP_PWD"]
 
-MAX_LIMIT=10000
 
 print(f"Config: {config}")
 
@@ -59,7 +51,7 @@ class Context:
     @staticmethod
     def read_context():
         # Connessione
-        Context.conn = mysql_connect(config["MYSQL_HOST"], config["MYSQL_USER"], MYSQL_PWD, config["MYSQL_DB"])
+        Context.conn = mysql_connect(config["MYSQL_HOST"], config["MYSQL_USER"], config["MYSQL_PWD"], config["MYSQL_DB"])
         mysql_create_tables(Context.conn)
 
         Context.sessione = read_session_data()
@@ -428,7 +420,7 @@ def login():
         password = request.form["password"]
         
         # Valida l'utente
-        conn = mysql_connect(config["MYSQL_HOST"], config["MYSQL_USER"], MYSQL_PWD, config["MYSQL_DB"])
+        conn = mysql_connect(config["MYSQL_HOST"], config["MYSQL_USER"], config["MYSQL_PWD"], config["MYSQL_DB"])
         user = validate_user(username, password, conn)
 
         # close mysql connection

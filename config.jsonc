@@ -1,0 +1,19 @@
+{
+  "SECRET_KEY": "DFGGRE£$%ERDFG$£%",
+  "DEMO_HANDLE": "nodiux.bsky.social",
+  "DEMO_APP_PWD": "42fc-xq6u-p2qh-tlm5",
+  "HOME": "index.html",
+  "MAX_LIMIT": 10000,
+
+  // Localhost configuration
+  "MYSQL_HOST": "localhost",
+  "MYSQL_USER": "nodiux",
+  "MYSQL_DB": "nodiux",
+  "MYSQL_PWD": "Medoro90"
+  
+  // PythonAnywhere configuration
+  // MYSQL_HOST: "nodiux.mysql.pythonanywhere-services.com",
+  // MYSQL_USER: "nodiux",
+  // MYSQL_DB: "nodiux$nodiux",
+  // MYSQL_PWD: "Medoro90"
+}

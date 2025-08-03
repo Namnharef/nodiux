@@ -1,31 +1,5 @@
-TODO:       
-        CREATE TABLE IF NOT EXISTS users (
-            username VARCHAR(255) PRIMARY KEY,
-            password VARCHAR(255) NOT NULL
-        );
-
-        INSERT INTO users (username, password) VALUES
-            ('nodiuxdemo1', 'Malala431'),
-            ('nodiuxdemo2', 'Mandela782'),
-            ('nodiuxdemo3', 'Camus159'),
-            ('nodiuxdemo4', 'Maathai624'),
-            ('nodiuxdemo5', 'Menchu947'),
-            ('nodiuxdemo6', 'Murad318'),
-            ('nodiuxdemo7', 'Ressa506'),
-            ('nodiuxdemo8', 'Tutu893'),
-            ('nodiuxdemo9', 'Pamuk274'),
-            ('nodiuxdemo10', 'Morrison635'),
-            ('nodiuxdemo11', 'Karman482'),
-            ('nodiuxdemo12', 'Yunus719'),
-            ('nodiuxdemo13', 'Ebadi364'),
-            ('nodiuxdemo14', 'Gbowee528'),
-            ('nodiuxdemo15', 'Liu947'),
-            ('nodiuxdemo16', 'Annan153'),
-            ('nodiuxdemo17', 'Tagore846'),
-            ('nodiuxdemo18', 'VonSuttner290'),
-            ('nodiuxdemo19', 'Romer673'),
-            ('nodiuxdemo20', 'Sartre415'),
-            ('nodiux', 'Medoro90');
+03/08/2025
+ - Users in sql
 
 02/08/2025
  - Gestione utenti demo
