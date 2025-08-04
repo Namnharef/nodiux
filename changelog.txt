@@ -1,6 +1,13 @@
+04/08/2025
+ - correzioni a search more
+ - ora search more aggiorna alla fine i dati di riga
+ - correzioni a login
+
 03/08/2025
  - Users in sql
  - Tutte le pwd e configurazioni in config.jsonc
+ - Search more
+ - Remove search
 
 02/08/2025
  - Gestione utenti demo

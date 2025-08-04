@@ -184,7 +184,7 @@ def handle_context():
     #print(df.to_json(orient='records')[:10000])
 
     print(f'{Context.handle}')
-    searches = mysql_get_searches(session.get('user'), Context.conn)
+    searches = mysql_get_searches(session.get('user'), Context.conn, '')
 
     #print(df.to_json(orient='records')[:10000])
 

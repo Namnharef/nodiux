@@ -1,54 +1,266 @@
-                  <!-- table -->
-                  <table class="table table-sm table-borderless table-hover" style="border-top: 8px solid transparent;">
-                    <thead>
-                      <tr>
-                        <th><strong>Social channel<strong></th>
-                        <th><strong>Keywords<strong></th>
-                        <th><strong>Posts<strong></th>
-                        <th><strong>Users<strong></th>
-                        <th><strong>Hashtags<strong></th>
-                        <th><strong>Status<strong></th>
-                        <th><strong>Date<strong></th>
-                        <th><strong>Action<strong></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for search in searches %}
-                      <!-- <tr onclick="document.getElementById('form-{{ loop.index }}').submit()" style="cursor: pointer;"> -->
-                      <tr>
-                        <form id="form-{{ loop.index }}" method="POST" action="/view.html">
-                            <input type="hidden" name="handle" value="{{ sessione.handle }}">
-                            <input type="hidden" name="search_id" value="{{ search.search_id }}">
-                            <input type="hidden" name="session_id" value="{{ search.session_id }}">
-                            <input type="hidden" name="mode" value="{{ search.mode }}">
-                            <input type="hidden" name="query" value="{{ search.query }}">
-                            <input type="hidden" name="username" value="{{ sessione.username }}">
-                            <input type="hidden" name="limit" value="{{ search.resultlimit }}">
-                        </form>
-                        <td> <!-- social channel -->
-                          <div class="avatar avatar-sm">
-                            <img src="./assets/avatars/bluesky-black-round-circle-outline-logo-1.png" alt="..." class="avatar-img rounded-circle">
-                          </div>
-                        </td>
-                        <td>{% if search.mode == 'Hashtag' %}#{% else %}@{% endif %}{{ search.query }}</td>
-                        <td>{{ search.posts }} ({{ search.resultlimit }})</td>
-                        <td>{{ search.users }}</td>
-                        <td>{{ search.hashtags }}</td>
-                        <td><span class="badge badge-success">Completed</span></td>
-                        <td>{{ search.timestamp }}</td>
-                        <!-- <td>{{ search.mode }}</td> -->
-                        <!-- <td>{{ search.resultlimit }}</td> -->
-                        <!-- <td><span class="badge badge-success">Completed</span><td> -->
-                        <!-- <td><span class="badge badge-primary">Running</span></td> -->
-                        <td><button class="btn btn-sm dropdown-toggle more-horizontal" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                          <span class="text-muted sr-only">Action</span>
-                          </button>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item" href="#" onclick="document.getElementById('form-{{ loop.index }}').submit();">View</a>
-                            <a class="dropdown-item" href="#">Remove</a>
-                        </div>
-                        </td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Supponendo che ogni riga abbia id=search-row-<search_id>
+    document.querySelectorAll('tr[id^="search-row-"]').forEach(row => {
+      const search_id = row.id.replace('search-row-', '');
+      updateStatusAndProgress(search_id);
+    });
+  });
+ 
+  function startSearchMore(search_id) {
+    fetch('/search_more/' + encodeURIComponent(search_id), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'started') {
+        console.log("Search More started for", search_id);
+        // Avvia il polling per aggiornare il progresso
+        setTimeout(() => updateProgress(search_id), 2000);
+      } else if (data.error) {
+        console.error('Error:', data.error);
+      }
+    })
+    .catch(err => console.error('Request failed:', err));
+  }
+
+  function updateProgress(search_id) {
+    console.log("Updating progress for search_id:", search_id);
+    fetch(`/progress/${encodeURIComponent(search_id)}`, {
+      credentials: 'same-origin'   // invia cookie sessione se serve
+    })
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      console.log("Progress data received:", data);
+      if (data.progress !== undefined) {
+        updateStatusAndProgressHtml(search_id, data);
+        if (data.status !== 'completed' && data.status !== 'error') {
+          // richiamo ricorsivo dopo 2 secondi
+          setTimeout(() => updateProgress(search_id), 2000);
+        }
+      } else {
+        console.warn(`No progress cell found for search_id=${search_id}`);
+      }
+    })
+    .catch(err => {
+      console.error('Errore fetch progress:', err);
+      // Ritenta dopo 1 secondo in caso di errore di rete
+      //setTimeout(() => updateProgress(search_id), 1000);
+    });
+  }
+
+// Funzione che fa la fetch e ritorna i dati come Promise
+function fetchStatusAndProgress(search_id) {
+  return fetch(`/progress/${encodeURIComponent(search_id)}`, {
+    credentials: 'same-origin'
+  })
+  .then(res => {
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    return res.json();
+  });
+}
+
+// Funzione che aggiorna l’HTML in base ai dati ricevuti
+function updateStatusAndProgressHtml(search_id, data) {
+  // Aggiorna status
+  const statusCell = document.querySelector(`#status-${search_id}`);
+  if (statusCell) {
+    let badge = statusCell.querySelector('span.badge');
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.classList.add('badge');
+      statusCell.appendChild(badge);
+    }
+
+    let badgeClass = 'badge-secondary';
+    let statusText = 'Unknown';
+
+    if (data.status) {
+      statusText = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+      if (data.status.toLowerCase() === 'running' || data.status.toLowerCase() === 'idle') {
+        badgeClass = 'badge-primary';
+      } else if (data.status.toLowerCase() === 'completed') {
+        badgeClass = 'badge-success';
+      } else if (data.status.toLowerCase() === 'error') {
+        badgeClass = 'badge-danger';
+      }
+    }
+
+    badge.className = `badge ${badgeClass}`;
+    badge.textContent = statusText;
+  }
+
+  // Aggiorna progress
+  const progressCell = document.querySelector(`#progress-${search_id}`);
+  if (progressCell) {
+    if (data.progress !== undefined) {
+      if (data.progress >= 100) {
+        progressCell.textContent = 'Completed';
+      } else {
+        progressCell.textContent = data.progress + '%';
+      }
+    } else {
+      progressCell.textContent = '-';
+    }
+  }
+
+  // Nuovo: aggiorna posts, users e hashtags se presente array searches con dati aggiornati
+  if (data.searches && data.searches.length > 0) {
+    const search = data.searches[0];  // Prendi il primo elemento
+
+    // Aggiorna Posts (la cella corrispondente deve avere un id specifico come 'posts-<search_id>')
+    const postsCell = document.querySelector(`#posts-${search_id}`);
+    if (postsCell) {
+      postsCell.textContent = `${search.posts} (${search.resultlimit})`;
+    }
+
+    // Aggiorna Users
+    const usersCell = document.querySelector(`#users-${search_id}`);
+    if (usersCell) {
+      usersCell.textContent = search.users;
+    }
+    
+    // Aggiorna Hashtags
+    const hashtagsCell = document.querySelector(`#hashtags-${search_id}`);
+    if (hashtagsCell) {
+      hashtagsCell.textContent = search.hashtags;
+    }
+  }
+}
+
+// Funzione principale che usa le due precedenti per fetchare e aggiornare
+function updateStatusAndProgress(search_id) {
+  fetchStatusAndProgress(search_id)
+    .then(data => {
+      updateStatusAndProgressHtml(search_id, data);
+    })
+    .catch(err => {
+      console.error('Errore fetch progress/status:', err);
+      // opzione di retry:
+      // setTimeout(() => updateStatusAndProgress(search_id), 3000);
+    });
+}
+
+function clearSearchMore(search_id) {
+  fetch(`/clear_search_more/${encodeURIComponent(search_id)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+  })
+  .then(res => {
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    return res.json();
+  })
+  .then(data => {
+    if (data.success) {
+      console.log(`Clear search more successful for ${search_id}`);
+      updateStatusAndProgress(search_id);  // aggiorna lo stato e progresso
+    } else {
+      console.error('Clear search more failed:', data.error);
+      alert('Clear failed: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(err => {
+    console.error('Error clearing search more:', err);
+    alert('Error clearing search more: ' + err.message);
+  });
+}
+
+function removeSearch(search_id) {
+  if (!confirm('Are you sure you want to delete this search entry?')) {
+    return; // annulla se non confermato
+  }
+  fetch(`/remove/${encodeURIComponent(search_id)}`, {
+    method: 'POST',
+    credentials: 'same-origin',
+  })
+  .then(res => {
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    return res.json();
+  })
+  .then(data => {
+    if (data.success) {
+      console.log(`Remove search successful for ${search_id}`);
+      const row = document.querySelector(`#search-row-${search_id}`);
+      if (row) {
+        row.remove();
+      }
+    } else {
+      console.error('Remove search failed:', data.error);
+      alert('Remove failed: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(err => {
+    console.error('Error removing search:', err);
+    alert('Error removing search: ' + err.message);
+  });
+}
+
+</script>
+
+<!-- partsearches.html -->
+<table class="table table-sm table-borderless table-hover" style="border-top: 8px solid transparent;">
+  <thead>
+    <tr>
+      <th><strong>Social channel</strong></th>
+      <th><strong>Keywords</strong></th>
+      <th><strong>Posts</strong></th>
+      <th><strong>Users</strong></th>
+      <th><strong>Hashtags</strong></th>
+      <th><strong>Status</strong></th>
+      <th><strong>Date</strong></th>
+      <th><strong>Progress</strong></th>
+      <th><strong>Action</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for search in searches %}
+    <tr id="search-row-{{ search.search_id }}">
+      <form id="form-{{ loop.index }}" method="POST" action="/view.html">
+        <input type="hidden" name="handle" value="{{ sessione.handle }}">
+        <input type="hidden" name="search_id" value="{{ search.search_id }}">
+        <input type="hidden" name="session_id" value="{{ search.session_id }}">
+        <input type="hidden" name="mode" value="{{ search.mode }}">
+        <input type="hidden" name="query" value="{{ search.query }}">
+        <input type="hidden" name="username" value="{{ sessione.username }}">
+        <input type="hidden" name="limit" value="{{ search.resultlimit }}">
+      </form>
+      <td>
+        <div class="avatar avatar-sm">
+          <img src="./assets/avatars/bluesky-black-round-circle-outline-logo-1.png" alt="..." class="avatar-img rounded-circle">
+        </div>
+      </td>
+      <td>{% if search.mode == 'Hashtag' %}#{% else %}@{% endif %}{{ search.query }}</td>
+      <td id="posts-{{ search.search_id }}">{{ search.posts }} ({{ search.resultlimit }})</td>
+      <td id="users-{{ search.search_id }}">{{ search.users }}</td>
+      <td id="hashtags-{{ search.search_id }}">{{ search.hashtags }}</td>
+      <td id="status-{{ search.search_id }}">
+        <span class="badge badge-secondary">Loading...</span>
+      </td>
+      <td>{{ search.timestamp }}</td>
+      <td id="progress-{{ search.search_id }}" style="min-width: 80px; text-align: center;">
+        0%
+      </td>
+      <td>
+        <button class="btn btn-sm dropdown-toggle more-horizontal" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <span class="text-muted sr-only">Action</span>
+        </button>
+          <div class="dropdown-menu dropdown-menu-right">
+            <a class="dropdown-item" href="#" onclick="document.getElementById('form-{{ loop.index }}').submit();">View</a>
+            <a class="dropdown-item" href="#" onclick="removeSearch('{{ search.search_id }}')">Remove</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#" onclick="startSearchMore('{{ search.search_id }}')">Add more posts (beta)</a>
+            <a class="dropdown-item" href="#" onclick="updateStatusAndProgress('{{ search.search_id }}')">Refresh status (beta)</a>
+            <a class="dropdown-item" href="#" onclick="clearSearchMore('{{ search.search_id }}')">Stop (beta)</a>
+          </div>
+
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+

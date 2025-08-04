@@ -26,7 +26,7 @@ def login():
 
         # Controlla se l'utente esiste e la password corrisponde
         if not user:
-            return my_render_template(HOME, error="Credenziali non valide")
+            return redirect(url_for("home"))
         else:
             session["user"] = username
             return redirect(url_for("home"))  # Reindirizza a index.html

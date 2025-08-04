@@ -14,7 +14,7 @@ SQL_SEARCHES = '''
         SELECT s.*, sc.cid
         FROM searches s
         LEFT OUTER JOIN searches_cids sc ON s.session_id = sc.session_id AND s.search_id = sc.search_id
-        WHERE user = %s
+        WHERE user = %s and (%s = '' OR s.search_id = %s)
     )
     SELECT p.*, h.hashtags, m.mentions, u.users, e.emojis
     FROM ( 
@@ -131,6 +131,16 @@ def mysql_create_tables(conn):
         );
     ''')
 
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_async_searches (
+            username VARCHAR(64) PRIMARY KEY, -- chiave unica per utente
+            search_id VARCHAR(64) NOT NULL,
+            progress INT DEFAULT 0,
+            status ENUM('idle', 'running', 'completed', 'error') DEFAULT 'idle',
+            last_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        );
+    ''')
+
     return None
     
 
@@ -164,6 +174,46 @@ def save_to_mysql(df, bluesky_handle, session_id, conn, mode, query, limit, ip_a
             for emoji in post.get('emojis', []):
                 cursor.execute('INSERT IGNORE INTO post_emojis (cid, emoji) VALUES (%s, %s)', (post['cid'], emoji))               
         
+            cursor.execute('''
+                INSERT IGNORE INTO searches_cids
+                (session_id, search_id, cid)
+                VALUES (%s, %s, %s)
+            ''', (session_id, search_id, post['cid']))
+
+    conn.commit()
+    cursor.close()
+    return None
+
+# Save posts to MySQL    
+def add_to_mysql(df, session_id, conn, search_id):
+    cursor = conn.cursor()
+
+    print(f"add_to_mysql session_id={session_id}, search_id={search_id}")
+
+    # Insert data                 
+    if df is not None and not df.empty:
+        for _, post in df.iterrows():
+            cursor.execute('''
+                INSERT INTO posts (cid, uri, author_did, author_handle, created_at, text)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    text = VALUES(text)
+            ''', (
+                post['cid'], post['uri'], post['author_did'], post['author_handle'],
+                post['created_at'], post['text']
+            ))
+            #print(f"Post {post['cid']} added/updated in MySQL")
+
+            for mention in post.get('mentions', []):
+                cursor.execute('INSERT IGNORE INTO mentions (cid, handle) VALUES (%s, %s)', (post['cid'], mention))
+
+            for hashtag in post.get('hashtags', []):
+                cursor.execute('INSERT IGNORE INTO hashtags (cid, hashtag) VALUES (%s, %s)', (post['cid'], hashtag))
+
+            for emoji in post.get('emojis', []):
+                cursor.execute('INSERT IGNORE INTO post_emojis (cid, emoji) VALUES (%s, %s)', (post['cid'], emoji))               
+        
+            #print(f"post cid {post['cid']}, session_id {session_id}, search_id {search_id}")
             cursor.execute('''
                 INSERT IGNORE INTO searches_cids
                 (session_id, search_id, cid)
@@ -244,14 +294,16 @@ def mysql_connect(host, user, password, database):
 
 
 # Get searches from MySQL
-def mysql_get_searches(user, conn):
+def mysql_get_searches(user, conn, search_id=None):
     searches = []
     cursor = conn.cursor()
 
     # Prima seleziono i post base
     mySqlCmd = SQL_SEARCHES
     # print(f"mysql_get_searches {mySqlCmd}")
-    cursor.execute(SQL_SEARCHES, (user,))
+    search_id = search_id if search_id else ''
+    print(f"mysql_get_searches user={user}, search_id={search_id}")
+    cursor.execute(SQL_SEARCHES, (user,search_id, search_id))
     searches_data = cursor.fetchall()
     print(f"mysql_get_searches {len(searches_data)} risultati trovati")
     # bluesky_handle, session_id, mode, query, resultlimit, ip_address, timestamp, search_id, posts, hashtags, mentions, users, emojis
