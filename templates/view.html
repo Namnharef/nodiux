@@ -171,6 +171,7 @@
 
                     <!-- Icone allineate -->
                     <div class="d-flex align-items-center">
+
                       <!-- Tooltip grigio senza freccina -->
                       <div class="dropdown no-arrow mr-2">
                         <a href="#" role="button" id="tooltipMention"
@@ -183,10 +184,15 @@
                           <div class="dropdown-item disabled small text-muted">
                             The mentions network is a directed graph where edges connect users to those they mention within the same post.<br><br>
                             • <strong>Node size</strong>: proportional to the number of mentions received<br>
-                            • <strong>Edge thickness</strong>: indicates how many times one user mentioned another
+                            • <strong>Edge thickness</strong>: indicates how many times one user mentioned another<br><br>
+
+                              <strong>How to cite Nodiux:</strong><br>
+                              <code id="nodiuxCitation1" style="white-space: pre-wrap;"></code><br><br>
+                              <small class="text-muted">Citation in APA style. The retrieval date is automatically generated.</small>
                           </div>
                         </div>
                       </div>
+
 
                       <!-- Download menu grigio senza freccina -->
                       <div class="dropdown no-arrow">
@@ -252,17 +258,21 @@
                   <div class="d-flex align-items-center">
                     <!-- Tooltip grigio senza freccina -->
                     <div class="dropdown no-arrow mr-2">
-                      <a href="#" role="button" id="tooltipMention"
+                      <a href="#" role="button" id="tooltipHashtag"
                          data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #374c6a;">
-                        <i class="fas fa-info-circle fa-sm fa-fw" title="Info about the mentions network"></i>
+                        <i class="fas fa-info-circle fa-sm fa-fw" title="Info about the hashtags network"></i>
                       </a>
                       <div class="dropdown-menu dropdown-menu-right animated--fade-in"
-                           aria-labelledby="tooltipMention">
+                           aria-labelledby="tooltipHashtag">
                         <div class="dropdown-header font-weight-bold">What is this?</div>
                         <div class="dropdown-item disabled small text-muted">
                           The hashtag network is an undirected graph where edges connect hashtags that appear together in the same post.<br><br>
                           • <strong>Node size</strong>: proportional to the total number of occurrences<br>
-                          • <strong>Edge thickness</strong>: indicates how often two hashtags appear together
+                          • <strong>Edge thickness</strong>: indicates how often two hashtags appear together<br><br>
+
+                              <strong>How to cite Nodiux:</strong><br>
+                              <code id="nodiuxCitation2" style="white-space: pre-wrap;"></code><br><br>
+                              <small class="text-muted">Citation in APA style. The retrieval date is automatically generated.</small>
                         </div>
                       </div>
                     </div>
@@ -685,6 +695,31 @@
         });
       }
     </script>
+
+   <!-- Script per generare citazione dinamica -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // Blocca la chiusura automatica quando clicchi dentro a entrambi i dropdown
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+          menu.addEventListener('click', function(e) {
+            e.stopPropagation();
+          });
+        });
+
+        // Genera la citazione dinamica
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const todayFormatted = now.toLocaleDateString('en-US', options);
+        const citationText = `Nodiux. Mapping the social graph. (Version 1). (2025). [Software].\nRetrieved ${todayFormatted}, from https://www.nodiux.net/`;
+
+        // aggiorna entrambi gli elementi
+        document.getElementById('nodiuxCitation1').innerText = citationText;
+        document.getElementById('nodiuxCitation2').innerText = citationText;
+      });
+    </script>
+
+
+
 <!-- Footer -->
 <footer class="mt-5 mb-4 text-center text-muted small">
   <div style="font-size: 1em;">

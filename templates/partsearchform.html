@@ -16,43 +16,45 @@
                       <div class="modal-dialog modal-lg" role="document"> <!-- larghezza modal grande -->
                         <div class="modal-content">
                           <div class="modal-header">
-                            <h5 class="modal-title" id="queryModalLabel">Search for username posts or specific hashtag</h5>
+                            <h5 class="modal-title" id="queryModalLabel">Search for hashtag or user posts</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                               <span aria-hidden="true">&times;</span>
                             </button>
                           </div>
                           <div class="modal-body">
                             <form class="needs-validation" method="POST" action="/" id="searchForm" novalidate>
-                              <div class="custom-control custom-checkbox mb-3">
-                                <input type="checkbox" class="custom-control-input" id="customControlValidation1" required checked>
-                                <label class="custom-control-label" for="customControlValidation1">Bluesky</label>
-                                <div class="invalid-feedback">Example invalid feedback text</div>
-                              </div>
+                            <div class="custom-control custom-checkbox mb-3">
+                              <input type="checkbox" class="custom-control-input" id="platformBluesky" checked disabled>
+                              <label class="custom-control-label" for="platformBluesky">
+                                Bluesky <small class="text-muted">(other platforms coming soon)</small>
+                              </label>
+                            </div>
+
 
                               <div class="form-row">
                                 <div class="col-md-4 mb-3">
-                                  <label for="hashtagInput">Hashtag</label>
+                                  <label for="hashtagInput">Hashtag (e.g. bluesky)</label>
                                   <div class="input-group">
                                     <div class="input-group-prepend">
                                       <span class="input-group-text" id="inputGroupHashtag">#</span>
                                     </div>
-                                    <input type="text" class="form-control" id="hashtagInput" aria-describedby="inputGroupHashtag" 
-                                    placeholder="yourhashtag" name="hashtag" 
+                                    <input type="text" class="form-control" id="hashtagInput" aria-describedby="inputGroupHashtag"
+                                    placeholder="Hashtag (without #)" name="hashtag"
                                     value="{% if sessione.mode == 'Hashtag' %}{{ sessione.query }}{% endif %}">
-                                    <div class="invalid-feedback">Please enter a hashtag</div>
+                                    <div class="invalid-feedback">Please enter an hashtag</div>
                                   </div>
                                 </div>
-                               
+
                                 <div class="col-md-4 mb-3">
-                                  <label for="usernameInput">Username</label>
+                                  <label for="usernameInput">Username (e.g. nodiux.bsky.social)</label>
                                   <div class="input-group">
                                     <div class="input-group-prepend">
                                       <span class="input-group-text" id="inputGroupUsername">@</span>
                                     </div>
-                                    <input type="text" class="form-control" id="usernameInput" aria-describedby="inputGroupUsername" 
-                                    placeholder="username" name="username" 
+                                    <input type="text" class="form-control" id="usernameInput" aria-describedby="inputGroupUsername"
+                                    placeholder="Username (without @)" name="username"
                                     value="{% if sessione.mode == 'User' %}{{ sessione.query }}{% endif %}">
-                                    <div class="invalid-feedback">Please enter a username</div>
+                                    <div class="invalid-feedback">Please enter an username</div>
                                   </div>
                                 </div>
 
@@ -101,7 +103,7 @@
 
                                     if (!isHashtag && !isUsername) {
                                       e.preventDefault();
-                                      hashtagInput.setCustomValidity('Inserisci almeno un hashtag o uno username');
+                                      hashtagInput.setCustomValidity('Please insert an hashtag or an username');
                                       hashtagInput.reportValidity();
                                     } else {
                                       hashtagInput.setCustomValidity('');
@@ -115,7 +117,7 @@
 
                                 <div class="col-md-4 mb-3">
                                   <label for="maxResultsInput">Max results</label>
-                                  <input type="number" class="form-control" id="maxResultsInput" placeholder="100" min="1" max="3000" 
+                                  <input type="number" class="form-control" id="maxResultsInput" placeholder="100" min="1" max="3000"
                                     name="limit" value="{{ sessione.limit }}" required>
                                   <div class="invalid-feedback">Please enter a valid number (1-3000)</div>
                                 </div>

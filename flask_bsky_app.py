@@ -144,10 +144,18 @@ def home():
     # close mysql connection
     Context.conn.close()
     
-    return my_render_template( HOME, kpis=PageResources.kpis, top10=PageResources.top10, mentions_graph=PageResources.graph_mentions, 
-                              hashtags_graph=PageResources.graph_hashtags, activity=PageResources.activity,
-                              posts=PageResources.posts.to_dict(orient='records'), sessione=Context.sessione,
+    return my_render_template( HOME, kpis=None, top10=None, mentions_graph=None, 
+                              hashtags_graph=None, activity=None,
+                              posts=None, 
+                              sessione=Context.sessione,
                               searches=searches, active_search_id=session.get('active_search_id', None))
+
+#HOME, kpis=PageResources.kpis, top10=PageResources.top10, mentions_graph=PageResources.graph_mentions, 
+ #                             hashtags_graph=PageResources.graph_hashtags, activity=PageResources.activity,
+  #                            posts=PageResources.posts.to_dict(orient='records'), 
+   #                           sessione=Context.sessione,
+    #                          searches=searches, active_search_id=session.get('active_search_id', None))
+
 
 
 # route .html

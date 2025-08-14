@@ -1,14 +1,151 @@
-<div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-  <div class="list-group list-group-flush">
-    {% for post in posts %}
-      <div class="list-group-item px-0 py-2 border-0">
-        <div class="small text-muted mb-1">
-          <strong>{{ post.author_handle }}</strong> · {{ post.created_at }}
+<div>
+  <!-- Barra ordinamento -->
+  <div style="display: flex; gap: 20px; font-size: 0.875rem; color: #6c757d; margin-bottom: 8px; user-select: none;">
+    <div id="sortDate" style="font-weight: 400; line-height: 1.2; display: flex; align-items: center; cursor: pointer;">
+      <span class="arrow" style="width: 12px; display: inline-block; margin-right: 0px;"></span>
+      Date
+    </div>
+    <div id="sortUser" style="font-weight: 400; line-height: 1.2; display: flex; align-items: center; cursor: pointer; padding-left: 88px;">
+      <span class="arrow" style="width: 12px; display: inline-block; margin-right: 0px;"></span>
+      User
+    </div>
+  </div>
+
+  <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+    <div class="list-group list-group-flush" id="postsList">
+      {% for post in posts %}
+        <div class="list-group-item px-0 py-2 border-0">
+          <div class="small text-muted mb-1">
+            <span class="post-date">{{ post.created_at }}</span> · <strong class="post-user">{{ post.author_handle }}</strong>
+          </div>
+          <div class="text-dark" style="overflow-x: auto;">
+            {{ post.text }}
+          </div>
         </div>
-        <div class="text-dark" style="overflow-x: auto;">
-          {{ post.text }}
-        </div>
-      </div>
-    {% endfor %}
+      {% endfor %}
+    </div>
   </div>
 </div>
+
+<script>
+  const postsList = document.getElementById('postsList');
+  const sortUserDiv = document.getElementById('sortUser');
+  const sortDateDiv = document.getElementById('sortDate');
+  const userArrow = sortUserDiv.querySelector('.arrow');
+  const dateArrow = sortDateDiv.querySelector('.arrow');
+
+  // Stati: 'desc', 'asc', 'none' (none = originale)
+  let sortStateUser = 'none';
+  let sortStateDate = 'desc'; // ordinamento di default: data discendente
+
+  // Funzione per ordinare e renderizzare
+  function renderPosts(posts) {
+    postsList.innerHTML = '';
+    posts.forEach(post => {
+      const div = document.createElement('div');
+      div.className = "list-group-item px-0 py-2 border-0";
+      div.innerHTML = `
+        <div class="small text-muted mb-1">
+          <span class="post-date">${post.created_at}</span> · <strong class="post-user">${post.author_handle}</strong>
+        </div>
+        <div class="text-dark" style="overflow-x: auto;">
+          ${post.text}
+        </div>
+      `;
+      postsList.appendChild(div);
+    });
+  }
+
+  // Original posts data from template rendering
+  const originalPosts = Array.from(postsList.children).map(div => ({
+    author_handle: div.querySelector('.post-user').textContent,
+    created_at: div.querySelector('.post-date').textContent,
+    text: div.querySelector('.text-dark').textContent.trim(),
+  }));
+
+  // Funzione per sort
+  function sortPosts(by, order) {
+    let sorted = [...originalPosts];
+    if (by === 'user') {
+      sorted.sort((a, b) => {
+        if (a.author_handle < b.author_handle) return order === 'asc' ? -1 : 1;
+        if (a.author_handle > b.author_handle) return order === 'asc' ? 1 : -1;
+        return 0;
+      });
+    } else if (by === 'date') {
+      sorted.sort((a, b) => {
+        const dateA = new Date(a.created_at);
+        const dateB = new Date(b.created_at);
+        return order === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+    }
+    return sorted;
+  }
+
+  // Gestione click e ciclo stati
+  function toggleSort(target) {
+    if (target === 'user') {
+      // reset stato ordinamento data
+      sortStateDate = 'none';
+      dateArrow.textContent = '-';
+      if (sortStateUser === 'desc') {
+        sortStateUser = 'asc';
+        userArrow.textContent = '↑';
+      } else if (sortStateUser === 'asc') {
+        sortStateUser = 'none';
+        userArrow.textContent = '–';
+      } else {
+        sortStateUser = 'desc';
+        userArrow.textContent = '↓';
+      }
+    } else if (target === 'date') {
+      // reset stato ordinamento user
+      sortStateUser = 'none';
+      userArrow.textContent = '-';
+      if (sortStateDate === 'desc') {
+        sortStateDate = 'asc';
+        dateArrow.textContent = '↑';
+      } else if (sortStateDate === 'asc') {
+        sortStateDate = 'none';
+        dateArrow.textContent = '–';
+      } else {
+        sortStateDate = 'desc';
+        dateArrow.textContent = '↓';
+      }
+    }
+    updatePosts();
+  }
+
+  // Funzione per aggiornare la lista con sort corrente
+  function updatePosts() {
+    if (sortStateUser !== 'none') {
+      const sorted = sortPosts('user', sortStateUser);
+      renderPosts(sorted);
+    } else if (sortStateDate !== 'none') {
+      const sorted = sortPosts('date', sortStateDate);
+      renderPosts(sorted);
+    } else {
+      renderPosts(originalPosts);
+    }
+  }
+
+  // Imposta frecce iniziali in base allo stato di default
+  function initArrows() {
+    userArrow.textContent = '';
+    if (sortStateDate === 'desc') {
+      dateArrow.textContent = '↓';
+    } else if (sortStateDate === 'asc') {
+      dateArrow.textContent = '↑';
+    } else {
+      dateArrow.textContent = '–';
+    }
+  }
+
+  // Event listeners
+  sortUserDiv.addEventListener('click', () => toggleSort('user'));
+  sortDateDiv.addEventListener('click', () => toggleSort('date'));
+
+  // Inizializzazione: frecce + sort iniziale
+  initArrows();
+  updatePosts();
+</script>
