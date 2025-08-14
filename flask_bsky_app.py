@@ -157,6 +157,18 @@ def home():
     #                          searches=searches, active_search_id=session.get('active_search_id', None))
 
 
+# Truncate post text to a maximum number of characters
+def truncate_post_text(posts, max_posts=100, max_chars=20):
+    truncated_posts = []
+    for post in posts[:max_posts]:
+        text = post.get('text', '')
+        if len(text) > max_chars:
+            text = text[:max_chars] + '...'
+        # Crea una copia del post con testo troncato
+        truncated_post = post.copy()
+        truncated_post['text'] = text
+        truncated_posts.append(truncated_post)
+    return truncated_posts
 
 # route .html
 @app.route('/<page>.html', methods=["GET", "POST"])
@@ -174,17 +186,28 @@ def render_html_page(page):
         
         print(f"render_html_page search_id {Context.search_id}")
         
-        if Context.session_id:
-                   
+        if Context.session_id:                   
             searches = handle_context()        
 
             # close mysql connection
             Context.conn.close()
 
-            return my_render_template( f"{page}.html", kpis=PageResources.kpis, top10=PageResources.top10, 
-                              mentions_graph=PageResources.graph_mentions, 
-                              hashtags_graph=PageResources.graph_hashtags, activity=PageResources.activity,
-                              posts=PageResources.posts.to_dict(orient='records'), sessione=Context.sessione, searches=searches )
+            posts_data = PageResources.posts.to_dict(orient='records')
+
+            if page == 'view':
+                posts_data = truncate_post_text(posts_data, max_posts=100, max_chars=100)
+
+            return my_render_template(
+                f"{page}.html", 
+                kpis=PageResources.kpis, 
+                top10=PageResources.top10, 
+                mentions_graph=PageResources.graph_mentions, 
+                hashtags_graph=PageResources.graph_hashtags, 
+                activity=PageResources.activity,
+                posts=posts_data,
+                sessione=Context.sessione, 
+                searches=searches
+            )
         else:
             return my_render_template(f"{page}.html", posts=[])
     except:
@@ -345,7 +368,7 @@ def get_search_progress(search_id):
 
     result = {'status': progress_data['status'], 'progress': progress_data['progress'], 'searches': searches[:1]}  # Prendo massimo 1 elemento
 
-    print(f"get_search_progress result={result}")
+    #print(f"get_search_progress result={result}")
 
     return jsonify(result)
 

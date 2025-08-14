@@ -78,9 +78,9 @@ class PageResources:
                                                             Context.limit)
 
     def load_from_sql():
-        print('load_from_sql')        
+        print(f'load_from_sql user: {session.get("user")}, session_id: {Context.session_id}, search_id: {Context.search_id}')        
         if Context.search_id:
-            PageResources.df = load_from_mysql(Context.session_id, Context.conn, Context.search_id)
+            PageResources.df = load_from_mysql(session.get("user"), Context.conn, Context.search_id)
         else:
             print('load_from_sql no search_id')
             PageResources.df = pd.DataFrame([])

@@ -1,4 +1,4 @@
-from flask import Blueprint, make_response, send_file, redirect, url_for, flash
+from flask import Blueprint, make_response, send_file, redirect, session, url_for, flash
 from io import BytesIO
 import traceback
 import pandas as pd
@@ -15,7 +15,7 @@ downloads = Blueprint('downloads', __name__)
 def download_mentions_csv():
     Context.read_context()
     handle_context()
-    df = load_from_mysql(Context.session_id, Context.conn, Context.search_id)
+    df = load_from_mysql(session.get("user"), Context.conn, Context.search_id)
     csv_edges, _ = build_mentions_csv_gexf(df)
     Context.conn.close()
     response = make_response(csv_edges)
@@ -28,7 +28,7 @@ def download_mentions_csv():
 def download_mentions_gexf():
     Context.read_context()
     handle_context()
-    df = load_from_mysql(Context.session_id, Context.conn, Context.search_id)
+    df = load_from_mysql(session.get("user"), Context.conn, Context.search_id)
     _, gexf_data = build_mentions_csv_gexf(df)
     Context.conn.close()
     return send_file(gexf_data, mimetype='application/octet-stream', as_attachment=True, download_name='mentions_network.gexf')
@@ -38,7 +38,7 @@ def download_mentions_gexf():
 def download_hashtags_csv():
     Context.read_context()
     handle_context()
-    df = load_from_mysql(Context.session_id, Context.conn, Context.search_id)
+    df = load_from_mysql(session.get("user"), Context.conn, Context.search_id)
     csv_edges, _ = build_hashtag_csv_gexf(df)
     Context.conn.close()
     response = make_response(csv_edges)
@@ -51,7 +51,7 @@ def download_hashtags_csv():
 def download_hashtags_gexf():
     Context.read_context()
     handle_context()
-    df = load_from_mysql(Context.session_id, Context.conn, Context.search_id)
+    df = load_from_mysql(session.get("user"), Context.conn, Context.search_id)
     _, gexf_data = build_hashtag_csv_gexf(df)
     Context.conn.close()
     return send_file(gexf_data, mimetype='application/octet-stream', as_attachment=True, download_name='hashtags_network.gexf')
@@ -61,7 +61,7 @@ def download_hashtags_gexf():
 def download_session_df_json():
     Context.read_context()
     handle_context()
-    df = load_from_mysql(Context.session_id, Context.conn, Context.search_id)
+    df = load_from_mysql(session.get("user"), Context.conn, Context.search_id)
     Context.conn.close()
     buffer = BytesIO(df.to_json(orient='records').encode('utf-8'))
     buffer.seek(0)

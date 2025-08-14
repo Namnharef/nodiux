@@ -229,6 +229,9 @@ function removeSearch(search_id) {
         <input type="hidden" name="username" value="{{ sessione.username }}">
         <input type="hidden" name="limit" value="{{ search.resultlimit }}">
       </form>
+      <form id="form-posts-{{ loop.index }}" method="GET" action="/collectedposts.html" style="display: none;">
+        <input type="hidden" name="search_id" value="{{ search.search_id }}">
+      </form>
       <td>
         <div class="avatar avatar-sm">
           <img src="./assets/avatars/bluesky-black-round-circle-outline-logo-1.png" alt="..." class="avatar-img rounded-circle">
@@ -252,6 +255,7 @@ function removeSearch(search_id) {
           <div class="dropdown-menu dropdown-menu-right">
             <a class="dropdown-item" href="#" onclick="document.getElementById('form-{{ loop.index }}').submit();">View</a>
             <a class="dropdown-item" href="#" onclick="removeSearch('{{ search.search_id }}')">Remove</a>
+            <a class="dropdown-item" href="#" onclick="document.getElementById('form-posts-{{ loop.index }}').submit();">Posts</a>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="#" onclick="startSearchMore('{{ search.search_id }}')">Add more posts (beta)</a>
             <a class="dropdown-item" href="#" onclick="updateStatusAndProgress('{{ search.search_id }}')">Refresh status (beta)</a>

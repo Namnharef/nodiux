@@ -112,24 +112,6 @@
 
                 <!-- Stat + Chart Block -->
                     <div class="row mt-4">
-                      <!-- Colonna sinistra: grafico + statistiche -->
-                      <div class="col-lg-6 mb-4">
-                        <div class="card border-0 shadow-none h-100">
-                          <div class="card-body">
-                            <!-- 🔹 Grafico simulato -->
-                            <h6 class="font-weight-bold mb-3" style="color: #374c6a;">Timeline</h6>
-                            <div class="chart-box mb-4">
-                                {% include 'partpostingactivitychart.html' %}
-                            </div>
-
-                            <!-- 🔹 Statistiche sotto il grafico -->
-                            <div class="d-flex justify-content-center text-center mt-4 flex-wrap gap-3">
-                              {% include 'partgraphstats.html' %}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
                       <!-- Colonna destra: tabella collected posts -->
                       <div class="col-lg-6 mb-4">
                         <div class="card border-0 shadow-none h-100">
@@ -161,170 +143,10 @@
       </body>
       </html>
 
-      <div class="row">
-
-              <!-- Mentions Network (8 colonne) -->
-              <div class="col-xl-8 mb-4">
-                <div class="card w-100 h-100 card border-0 shadow-none">
-                  <div class="card-header py-3 bg-white no-border d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold" style="color: #374c6a;">Mentions network</h6>
-
-                    <!-- Icone allineate -->
-                    <div class="d-flex align-items-center">
-                      <!-- Tooltip grigio senza freccina -->
-                      <div class="dropdown no-arrow mr-2">
-                        <a href="#" role="button" id="tooltipMention"
-                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #374c6a;">
-                          <i class="fas fa-info-circle fa-sm fa-fw" title="Info about the mentions network"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right animated--fade-in"
-                             aria-labelledby="tooltipMention">
-                          <div class="dropdown-header font-weight-bold">What is this?</div>
-                          <div class="dropdown-item disabled small text-muted">
-                            The mentions network is a directed graph where edges connect users to those they mention within the same post.<br><br>
-                            • <strong>Node size</strong>: proportional to the number of mentions received<br>
-                            • <strong>Edge thickness</strong>: indicates how many times one user mentioned another
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- Download menu grigio senza freccina -->
-                      <div class="dropdown no-arrow">
-                        <a href="#" role="button" id="menuMention"
-                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #374c6a;">
-                          <i class="fas fa-ellipsis-v fa-sm fa-fw"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right animated--fade-in"
-                             aria-labelledby="menuMention">
-                          <a class="dropdown-item d-flex align-items-center" href="/download/mentions.gexf">
-                            <i class="fe fe-download fe-16 text-muted mr-2"></i>
-                            <span>Download GEXF</span>
-                          </a>
-                          <a class="dropdown-item d-flex align-items-center" href="/download/mentions.gml">
-                            <i class="fe fe-download fe-16 text-muted mr-2"></i>
-                            <span>Download GML</span>
-                          </a>
-                          <a class="dropdown-item d-flex align-items-center" href="/download/mentions.csv">
-                            <i class="fe fe-download fe-16 text-muted mr-2"></i>
-                            <span>Download CSV</span>
-                          </a>
-                        </div>
-                      </div>
-
-
-                    </div>
-                  </div>
-
-                  <!-- Immagine -->
-                  <div class="card-body text-center">
-                    {% include 'partmentionsnetwork.html' %}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Top hashtags (4 colonne) -->
-              <div class="col-lg-4 mb-4 d-flex">
-                <div class="card w-100 bg-white card border-0 shadow-none h-100">
-                  <div class="card-header py-3 bg-white">
-                    <h6 class="m-0 font-weight-bold" style="color: #374c6a;">Most mentioned</h6>
-                  </div>
-                  <div class="card-body">
-                    <div class="table-responsive">
-                      {% include 'parttop10mentioned.html' %}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-      <!-- End of Main Content -->
-    <div class="row">
-
-            <!-- Hashtag Network (8 colonne) -->
-            <div class="col-xl-8 mb-4">
-              <div class="card w-100 bg-white card border-0 shadow-none h-100">
-                <div class="card-header py-3 bg-white d-flex justify-content-between align-items-center">
-                  <h6 class="m-0 font-weight-bold" style="color: #374c6a;">Hashtags network</h6>
-
-                  <!-- Icone allineate -->
-                  <div class="d-flex align-items-center">
-                    <!-- Tooltip grigio senza freccina -->
-                    <div class="dropdown no-arrow mr-2">
-                      <a href="#" role="button" id="tooltipMention"
-                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #374c6a;">
-                        <i class="fas fa-info-circle fa-sm fa-fw" title="Info about the mentions network"></i>
-                      </a>
-                      <div class="dropdown-menu dropdown-menu-right animated--fade-in"
-                           aria-labelledby="tooltipMention">
-                        <div class="dropdown-header font-weight-bold">What is this?</div>
-                        <div class="dropdown-item disabled small text-muted">
-                          The hashtag network is an undirected graph where edges connect hashtags that appear together in the same post.<br><br>
-                          • <strong>Node size</strong>: proportional to the total number of occurrences<br>
-                          • <strong>Edge thickness</strong>: indicates how often two hashtags appear together
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Download menu grigio senza freccina -->
-                    <div class="dropdown no-arrow">
-                      <a href="#" role="button" id="menuMention"
-                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="color: #374c6a;">
-                        <i class="fas fa-ellipsis-v fa-sm fa-fw"></i>
-                      </a>
-                      <div class="dropdown-menu dropdown-menu-right animated--fade-in"
-                           aria-labelledby="menuMention">
-                        <a class="dropdown-item d-flex align-items-center" href="/download/hashtags.gexf">
-                          <i class="fe fe-download fe-16 text-muted mr-2"></i>
-                          <span>Download GEXF</span>
-                        </a>
-                        <a class="dropdown-item d-flex align-items-center" href="/download/hashtags.gml">
-                          <i class="fe fe-download fe-16 text-muted mr-2"></i>
-                          <span>Download GML</span>
-                        </a>
-                        <a class="dropdown-item d-flex align-items-center" href="/download/hashtags.csv">
-                          <i class="fe fe-download fe-16 text-muted mr-2"></i>
-                          <span>Download CSV</span>
-                        </a>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-
-                <!-- Immagine -->
-                <div class="card-body text-center">
-                  {% include 'parthashtagsnetwork.html' %}
-                </div>
-              </div>
-            </div>
-
-            <!-- Top hashtags (4 colonne) -->
-            <div class="col-lg-4 mb-4 d-flex">
-              <div class="card w-100 bg-white card border-0 shadow-none h-100">
-                <div class="card-header py-3 bg-white">
-                  <h6 class="m-0 font-weight-bold" style="color: #374c6a;">Top hashtags</h6>
-                </div>
-                <div class="card-body">
-                  <div class="table-responsive">
-                    {% include 'parttop10hashtags.html' %}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-    <!-- End of Main Content -->
+      
 
 
 
-              </div> <!-- .row-->
-            </div> <!-- .col-12 -->
-          </div> <!-- .row -->
-        </div> <!-- .container-fluid -->
         <div class="modal fade modal-notif modal-slide" tabindex="-1" role="dialog" aria-labelledby="defaultModalLabel" aria-hidden="true">
           <div class="modal-dialog modal-sm" role="document">
             <div class="modal-content">
@@ -685,6 +507,31 @@
         });
       }
     </script>
+
+   <!-- Script per generare citazione dinamica -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // Blocca la chiusura automatica quando clicchi dentro a entrambi i dropdown
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+          menu.addEventListener('click', function(e) {
+            e.stopPropagation();
+          });
+        });
+
+        // Genera la citazione dinamica
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const todayFormatted = now.toLocaleDateString('en-US', options);
+        const citationText = `Nodiux. Mapping the social graph. (Version 1). (2025). [Software].\nRetrieved ${todayFormatted}, from https://www.nodiux.net/`;
+
+        // aggiorna entrambi gli elementi
+        document.getElementById('nodiuxCitation1').innerText = citationText;
+        document.getElementById('nodiuxCitation2').innerText = citationText;
+      });
+    </script>
+
+
+
 <!-- Footer -->
 <footer class="mt-5 mb-4 text-center text-muted small">
   <div style="font-size: 1em;">

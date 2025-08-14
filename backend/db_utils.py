@@ -226,7 +226,7 @@ def add_to_mysql(df, session_id, conn, search_id):
 
 
 # Load posts from MySQL
-def load_from_mysql(session_id, conn, search_id):
+def load_from_mysql(user, conn, search_id):
     posts = []
     cursor = conn.cursor()
 
@@ -235,10 +235,11 @@ def load_from_mysql(session_id, conn, search_id):
         SELECT posts.cid, posts.uri, posts.author_did, posts.author_handle, posts.created_at, posts.text 
         FROM searches_cids
         INNER JOIN posts ON posts.cid = searches_cids.cid
-        WHERE searches_cids.session_id = %s and searches_cids.search_id = %s
+        INNER JOIN searches ON searches.session_id = searches_cids.session_id AND searches.search_id = searches_cids.search_id
+        WHERE searches.user = %s and searches.search_id = %s
     '''
     print(f"{mySqlCmd}")
-    cursor.execute(mySqlCmd, (session_id, search_id))
+    cursor.execute(mySqlCmd, (user, search_id))
     posts_data = cursor.fetchall()
     print(f"{len(posts_data)} risultati trovati")
     for post_row in posts_data:
