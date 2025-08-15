@@ -17,7 +17,7 @@ import backend.auth_login_logout
 from flask import Flask, jsonify, render_template, request, session #, flash, redirect, url_for
 # from flask import Blueprint, send_file, make_response
 # from flask import send_from_directory
-import pandas as pd
+import pandas as pdù
 import os
 # import io
 # from io import BytesIO
