@@ -220,7 +220,7 @@ function removeSearch(search_id) {
   <tbody>
     {% for search in searches %}
     <tr id="search-row-{{ search.search_id }}">
-      <form id="form-{{ loop.index }}" method="POST" action="/view.html">
+      <form id="form-{{ loop.index }}" method="GET" action="/view.html">
         <input type="hidden" name="handle" value="{{ sessione.handle }}">
         <input type="hidden" name="search_id" value="{{ search.search_id }}">
         <input type="hidden" name="session_id" value="{{ search.session_id }}">

@@ -1,3 +1,7 @@
+14/08/2025
+ - Migliorie frontend
+ - Limite 100x20cc posts in view
+
 04/08/2025
  - correzioni a search more
  - ora search more aggiorna alla fine i dati di riga

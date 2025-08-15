@@ -104,7 +104,7 @@ def read_session_data():
             'cached': False,
             'search_id': ''
         })
-    #print(f"read_session_data {sessione}")
+    print(f"read_session_data {sessione}")
     return sessione
 
 
